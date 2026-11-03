@@ -662,7 +662,7 @@ def styled(df, caption, fmt=None):
 #
 # **Definitions**
 # * **RIA (Registered Investment Adviser):** a firm registered with the SEC to give investment advice. All 17,149 firms here are RIAs, including asset managers and fund advisers as well as firms that advise individuals.
-# * **Target RIA:** an RIA Nevis would sell to: US-headquartered, 50%+ of AUM from individuals and high-net-worth clients, offers financial planning, and no more than 500 clients per advisor (broker-dealers with 100+ IARs also qualify).
+# * **Target RIA:** an RIA Nevis would sell to: US-headquartered, 50%+ of AUM from individuals and high-net-worth clients, offers financial planning as an indication of an ongoing relationship, and no more than 500 clients per advisor (broker-dealers with 100+ IARs also qualify).
 # * **Broker-dealer (BD) / dual-registered:** an RIA that is also registered as a broker-dealer, so it can sell securities on commission as well as give fee-based advice. 231 target RIAs are dual-registered.
 # * **Wirehouse:** the largest national dual-registered firms, such as Morgan Stanley, Merrill, UBS and Wells Fargo Advisors.
 #
@@ -706,9 +706,18 @@ plt.tight_layout(); plt.show()
 
 # %% [markdown]
 # **Key takeaways**
+#
+#
 # * **Sustained growth at scale:** multi-billion-dollar target RIAs compounding at 60-70%+ a year (Waverly, Arkadios, Apella, Pathstone, Merit). Growth 50+ percentage points above the segment median shows this isn't just the market.
-# * **The inorganic list is a sales signal in its own right.** Firms that grew by acquisition or consolidation (Focus Partners, Osaic, Cetera) are integrating acquired teams, each with its own workflows and tech stack. See Section 7.2.
-# * The 1-year view is noisier; read it alongside the 3- and 5-year views (click to expand below the main table).
+#
+# * **Clear inorganic growth through acquisition.** Firms that grew by acquisition or consolidation (Focus Partners, Osaic, Cetera) are integrating acquired teams, each with its own workflows and tech stack. See Section 7.2.
+#
+# **Median growth rates:**
+# - +\$50B = ~13%
+# - \$10–50B = ~12%
+# - \$1–10B = ~15%
+# - <\$1B = ~13%
+#
 
 # %%
 #@title
@@ -733,28 +742,92 @@ show(inorganic_wm, "Grew by acquisition or consolidation (inorganic), 3 years: t
 
 # %% [markdown]
 # **Key takeaways**
-# * **Typical load:** a \$1B+ target RIA runs about \$120M-\$130M of AUM and 60-80 clients per advisor (median table below). Firms far above this are the most stretched.
+# * **Typical load:** a \$1B+ target RIA runs about \$120M-\$130M of AUM and 60-80 clients per advisor (dashed lines in the chart; median table below). Firms far above this are the most stretched.
 # * **Two kinds of strain.** High AUM per advisor with few clients (Circle Wealth, Prowell, First Manhattan) usually means ultra-high-net-worth or family-office models: fewer, deeper relationships where the pain is preparation and reporting quality. High clients per advisor (150-300+) means volume pain: meetings, follow-ups and compliance notes. Each suggests a different Nevis pitch.
 # * All-RIA rankings (which are dominated by fund complexes such as Vanguard) are in the Excel file.
 
 # %%
 #@title
-show(cap_wm, "Highest AUM per advisor: target RIAs with 3+ advisors (FY2025), top 5 per segment",
-     cols=["segment", "firm_name", "channel", "state", "aum", "advisors", "aum_per_advisor", "clients_per_advisor"], n=5, sort="aum_per_advisor")
-
-# %%
-#@title
-fig, ax = plt.subplots(figsize=(10, 4))
-data = [cap[(cap.segment == s) & cap.wealth_manager].aum_per_advisor.dropna() / 1e6 for s in LABELS]
-ax.boxplot(data, labels=[l.replace("$", r"\$") for l in LABELS], showfliers=False, whis=(10, 90)); ax.set_yscale("log")
-ticks = [10, 30, 100, 300, 1000, 3000]; ax.set_ylim(8, 4000); ax.set_yticks(ticks)
-ax.set_yticklabels([f"\\${t:,}M" for t in ticks]); ax.minorticks_off()
-ax.set_ylabel("AUM per advisor (log scale)")
-ax.set_title("AUM per advisor rises with firm size; box = middle half of firms, whiskers = 10th-90th percentile", fontweight="bold")
+pool = cap[cap.wealth_manager & (cap.aum >= 1e9) & (cap.clients_per_advisor > 0)]
+mx, my = pool.clients_per_advisor.median(), pool.aum_per_advisor.median() / 1e6     # typical load across all $1B+ target RIAs
+d = (pool.sort_values("aum_per_advisor", ascending=False).groupby("segment", observed=True).head(5)).copy()   # same firms as the table
+d["apa"] = d.aum_per_advisor / 1e6
+COLS = {"$1B-$10B": "#8FA3B8", "$10B-$50B": "#2A9D8F", ">$50B": "#E76F51"}
+SIZE = {"$1B-$10B": 70, "$10B-$50B": 110, ">$50B": 160}
+fig, ax = plt.subplots(figsize=(11, 7))
+for s, col in COLS.items():
+    x = d[d.segment == s]
+    ax.scatter(x.clients_per_advisor, x.apa, s=SIZE[s], color=col, alpha=0.9, edgecolor="white", linewidth=0.6,
+               label=s.replace("$", chr(92) + "$"))
+ax.set_xscale("log"); ax.set_yscale("log"); ax.minorticks_off()
+ax.set_xticks([1, 3, 10, 30, 100, 300]); ax.xaxis.set_major_formatter(mtick.FuncFormatter(lambda v, _: f"{v:,.0f}"))
+yt = [30, 100, 300, 1000, 3000]; ax.set_yticks(yt); ax.set_yticklabels([f"\\${t:,}M" for t in yt])
+ax.set_xlim(0.8, 600); ax.set_ylim(60, 4000)
+ax.axvline(mx, ls="--", color="grey", lw=1); ax.axhline(my, ls="--", color="grey", lw=1)
+ax.text(mx * 1.05, 64, f"typical: {mx:.0f} clients per advisor", fontsize=8, color="grey")
+ax.text(0.85, my * 1.07, f"typical: \\${my:.0f}M per advisor", fontsize=8, color="grey")
+ax.text(0.9, 3300, "Deep strain\nfew clients, very large books\n(UHNW / family-office models)", fontsize=9, color="#444", va="top")
+ax.text(560, 3300, "Volume strain\nmany clients and large books", fontsize=9, color="#444", va="top", ha="right")
+# Place labels so they don't overlap: work in screen pixels, push a label down until it clears those already placed
+fig.canvas.draw(); placed = []; px2pt = 72 / fig.dpi
+for _, r in d.assign(name=d.firm_name.map(nice_name)).sort_values("apa", ascending=False).iterrows():
+    x0, y0 = ax.transData.transform((r.clients_per_advisor, r.apa)); w = 6.2 * len(r["name"]); y = y0 + 4
+    while any(abs(y - py) < 13 and x0 < px + pw and px < x0 + w for px, py, pw in placed): y -= 13
+    placed.append((x0, y, w))
+    moved = abs(y - (y0 + 4)) > 1
+    ax.annotate(r["name"], (r.clients_per_advisor, r.apa), xytext=(8 * px2pt / px2pt, (y - y0) * px2pt), textcoords="offset points",
+                fontsize=8.5, va="center", arrowprops=dict(arrowstyle="-", color="#999", lw=0.6) if moved else None)
+ax.set_xlabel("Clients per advisor (log scale)"); ax.set_ylabel("AUM per advisor (log scale)")
+ax.set_title("Most stretched advisors: top 5 target RIAs per segment by AUM per advisor (FY2025)", fontweight="bold", loc="left")
+ax.legend(title="Segment", loc="lower left", frameon=False)
+for sp in ("top", "right"): ax.spines[sp].set_visible(False)
 plt.tight_layout(); plt.show()
 med = cap_medians.copy(); med.index = med.index.astype(str); med.index.name = "Segment"
 styled(med.rename(columns={"median AUM/advisor $M": "Median AUM per advisor ($M)", "clients_per_advisor": "Median clients per advisor"}),
        "Typical load per advisor: target RIAs with 3+ advisors (FY2025)", "{:,.0f}")
+
+
+# %%
+#@title
+show(cap_wm[cap_wm.segment.astype(str) != "<$1B"], "Highest AUM per advisor: target RIAs above $1B with 3+ advisors (FY2025), top 5 per segment",
+     cols=["segment", "firm_name", "channel", "state", "aum", "advisors", "aum_per_advisor", "clients_per_advisor"], n=5, sort="aum_per_advisor")
+
+# %%
+#@title
+import matplotlib.pyplot as plt
+import numpy as np
+
+# Get top 5 per segment sorted by aum_per_advisor
+top_cap_wm = cap_wm.groupby("segment", observed=True, group_keys=False).head(5).sort_values(["segment", "aum_per_advisor"], ascending=[False, True])
+
+fig, ax = plt.subplots(figsize=(10, 8))
+colors = {"<$1B": "#9C94E6", "$1B-$10B": "#473BCE", "$10B-$50B": "#1E1660", ">$50B": "#0B072B"}
+
+y_pos = np.arange(len(top_cap_wm))
+segment_colors = [colors[seg] for seg in top_cap_wm["segment"]]
+
+bars = ax.barh(y_pos, top_cap_wm["aum_per_advisor"] / 1e6, color=segment_colors, alpha=0.85)
+
+# Clean up names for nice display
+labels = [f"{nice_name(name)} ({seg})" for name, seg in zip(top_cap_wm["firm_name"], top_cap_wm["segment"])]
+ax.set_yticks(y_pos)
+ax.set_yticklabels(labels)
+
+# Add values on the bars
+for bar in bars:
+    width = bar.get_width()
+    ax.text(width + 10, bar.get_y() + bar.get_height()/2, f"${width:,.0f}M",
+            va='center', ha='left', fontsize=9, fontweight='semibold')
+
+ax.set_xlabel("AUM per Advisor ($M)")
+ax.set_title("Highest AUM per Advisor: Top 5 Target RIAs per Segment (FY2025)", fontweight="bold", fontsize=12)
+
+# Legend for segments
+handles = [plt.Rectangle((0,0),1,1, color=colors[seg]) for seg in LABELS[::-1]]
+ax.legend(handles, LABELS[::-1], title="AUM Segment")
+
+plt.tight_layout()
+plt.show()
 
 # %% [markdown]
 # # 5. Q3 Under-staffing: 92% of \$1B+ target RIAs grew AUM faster than advisors
