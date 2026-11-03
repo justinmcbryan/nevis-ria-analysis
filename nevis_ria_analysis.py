@@ -583,7 +583,7 @@ PLAIN = {"segment": "Segment", "firm_name": "Firm", "channel": "Channel", "state
          "advisor_cagr": "Advisor growth / yr", "staffing_gap": "Staffing gap", "excess_growth": "vs segment median",
          "aum_per_advisor": "AUM per advisor ($M)", "clients_per_advisor": "Clients per advisor", "advisors": "Advisors",
          "adv_start": "Advisors at start", "adv_end": "Advisors FY2025", "nevis_score": "Nevis score",
-         "new_controlling_entity_since_2020": "New owner since 2020", "likely_pe_sponsor_owner": "Likely PE-backed",
+         "new_controlling_entity_since_2020": "New owner since 2020", "likely_pe_sponsor_owner": "Likely PE-backed (est.)",
          "control_acquired_date": "Control acquired", "new_controlling_entities": "New controlling owner(s)"}
 CHANNEL_SHORT = {"Dual-registered (broker-dealer)": "Dual-registered (BD)"}
 BN, PCT, PTS = {"aum", "aum_start", "aum_end"}, {"aum_cagr", "advisor_cagr"}, {"staffing_gap", "excess_growth"}
@@ -832,7 +832,7 @@ ax.set_xlabel("% of firms using custodian"); ax.set_title("Wealth managers use S
 # | Signal | Source | What it indicates |
 # |---|---|---|
 # | **New controlling entity since 2020** | Schedules A/B: an entity (not an individual) with 25%+ ownership or control, acquired 2020 or later | Sale to a PE sponsor, strategic acquirer or new holding structure |
-# | **Likely PE sponsor** | Name of that new controlling entity (L.P., Partners, Equity, Investors, Aggregator, Co-Invest, Fund) | Financial-sponsor ownership, typically with a buy-and-build (roll-up) strategy |
+# | **Likely PE-backed (our estimate)** | **Not a Form ADV field.** Our flag: the new controlling entity's name looks like an investment vehicle (L.P., Partners, Equity, Investors, Aggregator, Co-Invest, Fund) and does not share a name with the firm itself | Financial-sponsor ownership, typically with a buy-and-build (roll-up) strategy |
 # | **Succession since 2020** | Schedule D Section 4 | The firm took over another registered adviser's business |
 # | **Ownership layers** | Count of Schedule B indirect owners | Complex holding structures typical of sponsor-backed platforms |
 
@@ -849,7 +849,7 @@ ax.set_xlabel("% of firms using custodian"); ax.set_title("Wealth managers use S
 osum = own_summary.copy(); osum.index = osum.index.astype(str); osum.index.name = "Segment"
 osum = osum[["wealth_managers", "new_controlling_entity", "likely_pe_sponsor", "any_succession", "ownership_change"]].rename(columns={
     "wealth_managers": "Wealth managers ($1B+)", "new_controlling_entity": "New controlling owner since 2020",
-    "likely_pe_sponsor": "Likely PE-backed", "any_succession": "Took over another adviser", "ownership_change": "Any ownership change"})
+    "likely_pe_sponsor": "Likely PE-backed (est.)", "any_succession": "Took over another adviser", "ownership_change": "Any ownership change"})
 display(styled(osum, "Share of $1B+ wealth managers showing each ownership-change signal",
                {c: ("{:,.0f}" if c.startswith("Wealth") else "{:.0%}") for c in osum.columns}))
 newown = own[own.new_controlling_entity_since_2020.fillna(False).astype(bool)].copy()
@@ -862,7 +862,7 @@ show(newown, "Largest wealth managers with a new controlling owner since 2020, t
 o = own_summary[["new_controlling_entity", "likely_pe_sponsor"]] * 100
 o.index = [str(i).replace("$", r"\$") for i in o.index]
 fig, ax = plt.subplots(figsize=(9, 4))
-o.rename(columns={"new_controlling_entity": "New controlling owner since 2020", "likely_pe_sponsor": "Likely PE-backed"}).plot.bar(ax=ax, color=["#473BCE", "#9C94E6"])
+o.rename(columns={"new_controlling_entity": "New controlling owner since 2020", "likely_pe_sponsor": "Likely PE-backed (est.)"}).plot.bar(ax=ax, color=["#473BCE", "#9C94E6"])
 for cont in ax.containers: ax.bar_label(cont, fmt="%.0f%%", fontsize=9)
 big = own[own.aum >= 10e9].new_controlling_entity_since_2020.fillna(False).astype(bool).mean()
 ax.set_ylabel("% of wealth managers"); ax.set_xlabel(""); ax.tick_params(axis="x", rotation=0)
@@ -931,25 +931,37 @@ O = ref["ownership"].reindex(list(SAMPLE))
 CU = (cust.sort_values("raum_at_custodian", ascending=False).groupby("crd").custodian.apply(lambda s: ", ".join(dict.fromkeys(s)))).reindex(list(SAMPLE))
 money = lambda v: f"${v / 1e9:,.2f}B" if v >= 1e9 else f"${v / 1e6:,.1f}M"
 rows = {
-    ("Brief", "SEC#"): L.sec_number, ("Brief", "Firm name"): L.firm_name, ("Brief", "Website"): L.website,
-    ("Brief", "City"): L.city, ("Brief", "State"): L.state, ("Brief", "AUM"): L.aum.map(money),
-    ("Brief", "Clients"): L.clients.map("{:,.0f}".format), ("Brief", "Avg AUM per client"): L.avg_aum_per_client.map(money),
-    ("Brief", "Employees"): L.employees.map("{:,.0f}".format), ("Brief", "Advisors"): L.advisors.map("{:,.0f}".format),
-    ("Brief", "Filing date"): L.filing_date.astype(str).str[:10],
-    ("Added", "CRD# (join key across years)"): pd.Series(L.index, index=L.index), ("Added", "Fiscal year of the metrics"): L.fiscal_year.map("FY{:.0f}".format),
-    ("Added", "Website source / confidence"): L.website_source.astype(str) + " / " + L.website_confidence.astype(str),
-    ("Added", "AUM segment"): L.segment.astype(str), ("Added", "Wealth manager (Nevis ICP)"): L.wealth_manager.map({True: "Yes", False: "No"}),
-    ("Added", "Channel"): L.channel, ("Added", "IARs"): L.iars.map("{:,.0f}".format),
-    ("Added", "AUM per advisor"): L.aum_per_advisor.map(money), ("Added", "Clients per advisor"): L.clients_per_advisor.map("{:,.0f}".format),
-    ("Added", "Individual/HNW share of AUM"): L.retail_aum_share.map("{:.0%}".format),
-    ("Added", "3-year AUM growth / yr"): W3.aum_cagr.map("{:.0%}".format), ("Added", "3-year staffing gap"): W3.staffing_gap.map(lambda x: f"{x * 100:+.0f} pts"),
-    ("Bulk archive", "Custodians (largest first)"): CU.fillna("–"),
-    ("Bulk archive", "New controlling owner since 2020"): O.new_controlling_entity_since_2020.map({True: "Yes", False: "No"}).fillna("–"),
-    ("Bulk archive", "Likely PE-backed"): O.likely_pe_sponsor_owner.map({True: "Yes", False: "No"}).fillna("–"),
+    ("Monthly Form ADV file: fields in the brief", "SEC#"): L.sec_number, ("Monthly Form ADV file: fields in the brief", "Firm name"): L.firm_name,
+    ("Monthly Form ADV file: fields in the brief", "Website"): L.website, ("Monthly Form ADV file: fields in the brief", "City"): L.city,
+    ("Monthly Form ADV file: fields in the brief", "State"): L.state, ("Monthly Form ADV file: fields in the brief", "AUM"): L.aum.map(money),
+    ("Monthly Form ADV file: fields in the brief", "Clients (sum of client types)"): L.clients.map("{:,.0f}".format),
+    ("Monthly Form ADV file: fields in the brief", "Avg AUM per client (AUM ÷ clients, as the brief asks)"): L.avg_aum_per_client.map(money),
+    ("Monthly Form ADV file: fields in the brief", "Employees"): L.employees.map("{:,.0f}".format),
+    ("Monthly Form ADV file: fields in the brief", "Advisors"): L.advisors.map("{:,.0f}".format),
+    ("Monthly Form ADV file: fields in the brief", "Filing date"): L.filing_date.astype(str).str[:10],
+    ("Monthly Form ADV file: extra fields", "CRD# (join key across years)"): pd.Series(L.index, index=L.index),
+    ("Monthly Form ADV file: extra fields", "IARs (registered reps)"): L.iars.map("{:,.0f}".format),
+    ("Calculated by us", "Fiscal year of the metrics"): L.fiscal_year.map("FY{:.0f}".format),
+    ("Calculated by us", "Website source / confidence"): L.website_source.astype(str) + " / " + L.website_confidence.astype(str),
+    ("Calculated by us", "AUM segment"): L.segment.astype(str),
+    ("Calculated by us", "Firm type (our classification)"): L.wealth_manager.map({True: "RIA – wealth manager", False: "RIA – other (asset manager, fund adviser…)"}),
+    ("Calculated by us", "Channel (from broker-dealer flag)"): L.channel,
+    ("Calculated by us", "AUM per advisor"): L.aum_per_advisor.map(money),
+    ("Calculated by us", "Clients per advisor"): L.clients_per_advisor.map("{:,.0f}".format),
+    ("Calculated by us", "Individual/HNW share of AUM"): L.retail_aum_share.map("{:.0%}".format),
+    ("Calculated by us", "3-year AUM growth / yr"): W3.aum_cagr.map("{:.0%}".format),
+    ("Calculated by us", "3-year staffing gap"): W3.staffing_gap.map(lambda x: f"{x * 100:+.0f} pts"),
+    ("Bulk Form ADV archive (to Dec 2024)", "Custodians (largest first)"): CU.fillna("–"),
+    ("Calculated by us", "New controlling owner since 2020 (from filed owner acquisition dates)"):
+        O.new_controlling_entity_since_2020.map({True: "Yes", False: "No"}).fillna("–"),
+    ("Our estimate", "Likely PE-backed (from owner names)"): O.likely_pe_sponsor_owner.map({True: "Yes", False: "No"}).fillna("–"),
 }
 sample = pd.DataFrame(rows).T
 sample.columns = list(SAMPLE.values()); sample.index.names = ["Source", "Field"]
-styled(sample, "Sample of the firm-level data: three firms, every field in the brief plus the fields added (full table in outputs/ria_firm_year_table.csv)")
+pulled = sample[~sample.index.get_level_values(0).isin(["Calculated by us", "Our estimate"])]
+derived = sample[sample.index.get_level_values(0).isin(["Calculated by us", "Our estimate"])]
+display(styled(pulled, "A. Data pulled from SEC filings: three sample firms (full table in outputs/ria_firm_year_table.csv)"))
+styled(derived, "B. Calculated by us from that data: same three firms")
 
 
 # %% [markdown]
