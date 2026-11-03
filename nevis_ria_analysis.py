@@ -4,20 +4,20 @@
 # - SEC monthly Form ADV Part 1A
 # - September 2021 to September 2026
 # - November 2026 for current firm details
-# - Additional Data pulled from the bulk archive filing (data not reflected in monthly summaries)
+# - SEC bulk Form ADV archive (filings to December 2024) for custodian and ownership data, which the monthly files do not include
 
 # %% [markdown]
-# # 1. Executive Summary:
+# # Executive Summary
 #
-# The quickest way for Nevis to gather as much market share as possible is by working with the largest and fastest growing RIAs in the US. This assessment is focused on identifying the best canditates for Nevis to focus efforts on. Below outlines each question asked and its intended purpose:
+# The quickest way for Nevis to gather as much market share as possible is by working with the largest and fastest growing RIAs in the US. This assessment is focused on identifying the best candidates for Nevis to focus efforts on. The table below outlines each question and why it matters:
 #
 #
 # | # | Question | Why it matters to Nevis |
 # |---|---|---|
-# | Q1 | How many RIAs fall into each AUM segment? | Identify largest firms given enterprise focus & fast following firms for longer tail pipeline & implementation|
+# | Q1 | How many RIAs fall into each AUM segment? | Identify largest firms given enterprise focus & fast following firms for longer tail pipeline & implementation |
 # | Q2a | Who are the fastest-growing firms? | Accelerated growth indicates potential advisor capacity constraints & potential budget for technology investment |
 # | Q2b | Which firms are capacity-strained? | High AUM (and clients) per advisor means advisors are stretched with broad servicing requirements |
-# | Q3 | Which RIAs appear under-staffed? | AUM growing faster than headcount is the clearest case for capacity challenges |
+# | Q2c | Which RIAs appear under-staffed? | AUM growing faster than headcount is the clearest case for capacity challenges |
 
 # %%
 #@title
@@ -647,7 +647,7 @@ def styled(df, caption, fmt=None):
 
 
 # %% [markdown]
-# #Q1 **How many RIAs fall into each AUM market segment?**
+# # Q1 - How many RIAs fall into each AUM market segment?
 #
 # *Segments use each firm's FY2025 total AUM from the SEC's September 2026 file.*
 
@@ -700,9 +700,9 @@ fig.suptitle(f"Most target RIAs are under \\$1B, but the {int(big.firms.sum())} 
 plt.tight_layout(); plt.show()
 
 # %% [markdown]
-# # **Q2a - Who are the fastest-growing firm**
+# # Q2a - Who are the fastest-growing firms?
 #
-# *Annual AUM growth over 3 years (main view), with 1- and 5-year views below. Organic growth only: firms that grew by acquisition or re-registration are listed separately.
+# *Annual AUM growth over 3 years (main view), with 1- and 5-year views below. Organic growth only: firms that grew by acquisition or re-registration are listed separately.*
 
 # %% [markdown]
 # **Key takeaways**
@@ -710,10 +710,10 @@ plt.tight_layout(); plt.show()
 #
 # * **Sustained growth at scale:** multi-billion-dollar target RIAs compounding at 60-70%+ a year (Waverly, Arkadios, Apella, Pathstone, Merit). Growth 50+ percentage points above the segment median shows this isn't just the market.
 #
-# * **Clear inorganic growth through acquisition.** Firms that grew by acquisition or consolidation (Focus Partners, Osaic, Cetera) are integrating acquired teams, each with its own workflows and tech stack. See Section 7.2.
+# * **Clear inorganic growth through acquisition.** Firms that grew by acquisition or consolidation (Focus Partners, Osaic, Cetera) are integrating acquired teams, each with its own workflows and tech stack. See Potential PE consolidation below.
 #
 # **Median growth rates:**
-# - +\$50B = ~13%
+# - >\$50B = ~13%
 # - \$10–50B = ~12%
 # - \$1–10B = ~15%
 # - <\$1B = ~13%
@@ -736,7 +736,7 @@ show(inorganic_wm, "Grew by acquisition or consolidation (inorganic), 3 years: t
      cols=["segment", "firm_name", "channel", "aum_start", "aum_end", "aum_cagr", "adv_start", "adv_end"], sort="aum_cagr")
 
 # %% [markdown]
-# #**Q2b - Which firms are capacity-strained?**
+# # Q2b - Which firms are capacity-strained?
 #
 # *FY2025 AUM and clients per advisor, firms with 3+ advisors. For target RIAs, clients per advisor matters as much as AUM, because advisor time scales with relationships, not dollars.*
 
@@ -792,13 +792,13 @@ show(cap_wm[cap_wm.segment.astype(str) != "<$1B"], "Highest AUM per advisor: tar
      cols=["segment", "firm_name", "channel", "state", "aum", "advisors", "aum_per_advisor", "clients_per_advisor"], n=5, sort="aum_per_advisor")
 
 # %% [markdown]
-# #Q2c - **Which RIAs appear under-staffed?**
+# # Q2c - Which RIAs appear under-staffed?
 #
 # *Staffing gap = annual AUM growth minus annual growth in advisor headcount. A positive gap means each advisor carries more AUM every year. Firms need at least 3 advisors at the start; acquisitions are excluded.*
 
 # %% [markdown]
 # **Key takeaways**
-# * **Almost entire data set is understaffed with** 92% of \$1B+ target RIAs sit above the dashed line in the chart; median AUM growth of 17.9% a year vs 4.6% for advisors.
+# * **Almost the entire data set is under-staffed:** 92% of \$1B+ target RIAs sit above the dashed line in the chart; median AUM growth of 17.9% a year vs 4.6% for advisors.
 # * **The clearest cases** grew AUM 50-70% a year with flat or falling advisor headcount (Wiss, Facet, Arkadios, Kingswood). They have the budget, and the strongest need for more leverage per advisor.
 
 # %%
@@ -824,7 +824,7 @@ collapsible("Show the 1-year and 5-year views",
     show(gap_wm[5], "5 years (FY2020→FY2025), top 5 per segment", cols=["segment", "firm_name", "channel", "aum_end", "aum_cagr", "advisor_cagr", "staffing_gap", "adv_start", "adv_end"], n=5, sort="staffing_gap"))
 
 # %% [markdown]
-# #Extra: Consolidated findings: a prioritised Nevis target list (\$10B+)
+# # Extra: Consolidated findings: a prioritised Nevis target list (\$10B+)
 # Every US target RIA above \$10B with 5+ advisors is scored on three signals:
 #
 # | Signal | What it shows | How it is measured |
@@ -845,17 +845,17 @@ show(big_targets, f"Prioritised Nevis targets: top 10 per segment by Nevis score
 
 
 # %% [markdown]
-# #Extra: Additional Supporting Data
+# # Extra: Additional Supporting Data
 
 # %% [markdown]
-# ##A) Which Custodians Should Nevis Focus On
+# ## A) Which custodians should Nevis focus on?
 #
 # *Source: Schedule D 5.K(3), each firm's latest filing to December 2024. Firms list every custodian holding 10%+ of their separately managed account AUM, so a firm can list several and columns add up to more than 100%.*
 
 # %% [markdown]
 # **Key takeaways**
 # * **Small Number of Custodians:** asset managers (all RIAs >\$50B) custody with BNY, State Street and Northern Trust. Target RIAs custody overwhelmingly with **Schwab and Fidelity**, plus Pershing.
-# * **Schwab and Fidelity each serve over half of \$10B+ target RIAs**, and Schwab ~64% of \$1B-\$10B firms. Schwab's investment in Nevis aligns with this.
+# * **Schwab and Fidelity each serve over half of \$10B+ target RIAs**, and Schwab ~64% of \$1B-\$10B firms. Schwab's participation in Nevis's Series B aligns with this.
 #
 # *Caveat: custodians are reported only if they hold ≥10% of a firm's separately managed account AUM, and come from filings up to Dec 2024.*
 
@@ -869,9 +869,9 @@ mat.rename(columns=lambda c: c.replace("$", r"\$")).plot.barh(ax=ax, color=["#C9
 ax.set_xlabel("% of firms using custodian"); ax.set_title("Target RIAs use Schwab and Fidelity; asset managers use BNY, State Street and Northern Trust", fontweight="bold"); plt.tight_layout(); plt.show()
 
 # %% [markdown]
-# ##B) Potential PE consolidation:
+# ## B) Potential PE consolidation
 #
-# nearly half of \$10B+ target RIAs have a new owner since 2020. While most of these come from entity restructuring, many are through consolidation in the market. Tech rationalization & efficiency gains are often the primary levers PE buyers use. Nevis represents an exceptionally good option for PE firms looks to check both these boxes.
+# Nearly half of \$10B+ target RIAs have a new owner since 2020. While some reflect internal restructuring, many come from consolidation in the market. Tech rationalization & efficiency gains are often the primary levers PE buyers use. Nevis is an exceptionally good option for PE owners looking to check both boxes.
 #
 # | Signal | Source | What it indicates |
 # |---|---|---|
