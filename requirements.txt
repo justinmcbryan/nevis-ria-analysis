@@ -3,3 +3,4 @@ numpy
 requests
 openpyxl
 matplotlib
+jinja2>=3.1.2
