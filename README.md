@@ -12,13 +12,16 @@ SEC monthly "Information About Registered Investment Advisers" roster (Form ADV 
 The notebook downloads the files from sec.gov on first run (set `SEC_USER_AGENT` if SEC asks for identification) and caches them in `data/`.
 
 ## Structure
-1. **Overview**: 1.1 how it's built and how to run · 1.2 the questions and why they matter · 1.3 data pipeline, method and analysis engine · 1.4 data checks (22 automated checks, V0–V21) · 1.5 code quality and AI use
+1. **Overview**: 1.1 how it's built and how to run · 1.2 the questions and why they matter · 1.3 key terms and data dates · 1.4 the pipeline (collapsed code: data loading, analysis engine and all 22 data checks run here, before any result)
 2. **Question 1**: RIAs by AUM segment (FY2025)
 3. **Question 2a**: fastest-growing firms (1/3/5 years)
 4. **Question 2b**: capacity-strained firms
 5. **Question 3**: under-staffed firms
-6. **Additional data of value**: custodians (6.1), ownership change / roll-ups (6.2), prioritised Nevis target list (6.3)
-7. **Export**
+6. **Bringing it together**: prioritised Nevis target list combining Q2a, Q2b and Q3
+7. **Additional supporting data**: custodians (7.1), ownership change / roll-ups (7.2)
+8. **Process**: how the data was built (8.1), data checks and results (8.2), code quality and AI use (8.3)
+
+Code cells are collapsed in Colab so the notebook reads as a report; click **Show code** on any cell to see it.
 
 `nevis_ria_analysis.py` is the same notebook in plain-text (jupytext) form for easy diffing.
 

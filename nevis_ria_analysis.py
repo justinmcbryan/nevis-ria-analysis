@@ -4,64 +4,42 @@
 # **Author:** Justin McBryan · November 2026
 #
 # ### Executive summary
-# **The market (FY2025, as filed by Sep 2026):** 17,149 SEC-registered RIAs manage \$177T, but most of the top is asset managers (Vanguard, BlackRock, PIMCO), who aren't Nevis buyers. This analysis focuses on the **6,940 wealth managers** (\$21.4T): firms whose AUM is mainly from individuals and high-net-worth clients and who serve them through advisors. Wirehouses and broker-dealers are included and tagged.
+# *Data: **FY2025** is the latest full year, taken from the SEC's September 2026 file. Custodian and ownership data come from filings up to December 2024.*
 #
-# | Segment (FY2025 AUM) | All SEC RIAs | Wealth managers | of which independent RIAs | of which dual-registered (BD) |
-# |---|---|---|---|---|
-# | <\$1B | 11,756 | 5,628 | 5,524 | 104 |
-# | \$1B-\$10B | 4,023 | 1,153 | 1,077 | 76 |
-# | \$10B-\$50B | 938 | 115 | 90 | 25 |
-# | >\$50B | 432 | 44 | 25 | 19 |
-# | **Total** | **17,149** | **6,940** | **6,716** | **224** |
+# | Question | Answer |
+# |---|---|
+# | **Q1. How many RIAs in each segment?** | 17,149 SEC-registered RIAs (\$177T), but the largest are asset managers, not Nevis buyers. The Nevis market is **6,940 wealth managers** (\$21.4T): 5,628 under \$1B, 1,153 at \$1–10B, 115 at \$10–50B and 44 above \$50B. |
+# | **Q2a. Who is growing fastest?** | Waverly (\$5.8B → \$29.9B in 3 years), Pathstone (\$24.8B → \$110B), Arkadios, Apella and Merit, growing 60–70%+ a year against a market median of ~13%. |
+# | **Q2b. Who is capacity-strained?** | A typical \$1B+ wealth manager runs ~\$120–130M and 60–80 clients per advisor. Circle Wealth (\$1.3B per advisor) and First Manhattan (\$750M) are the most stretched. |
+# | **Q3. Who is under-staffed?** | **92% of \$1B+ wealth managers grew AUM faster than advisor headcount** over 3 years (median 18.1% vs 4.6% a year). Clearest cases: Wiss, Facet, Arkadios, Kingswood. |
+# | **Who Nevis should target** | \$50B+: Cresset, Pathstone, Focus Partners, MAI, Carson, Savant, IEQ, Osaic, Fisher, Wells Fargo Advisors. \$10–50B: Aptus, RWA Wealth Partners and others (Section 6). |
+# | **Custodians** | Schwab and Fidelity each serve over half of \$10B+ wealth managers (Pershing ~17%): a natural partnership channel (Section 7.1). |
+# | **Ownership change** | Nearly half of \$10B+ wealth managers have a new controlling owner since 2020, many PE-backed, and need to standardise technology across acquired teams (Section 7.2). |
 #
-# **Key findings for Nevis**
-# 1. **The capacity squeeze is near-universal.** Among \$1B+ wealth managers, **92% grew AUM faster than advisor headcount** over three years: median AUM growth of **18.1% a year vs 4.6%** for advisors. Each advisor is carrying more every year, which is the problem Nevis solves.
-# 2. **The fastest sustained growers** include Waverly Advisors (\$5.8B → \$29.9B in 3 years), Pathstone (\$24.8B → \$110B), Arkadios, Apella and Merit Financial, compounding at 60-70%+ a year, far above the ~13% market-driven median.
-# 3. **Capacity strain is highest where few advisors carry very large books.** A typical \$1B+ wealth manager runs ~\$120M-\$130M and 60-80 clients per advisor; outliers such as Circle Wealth (\$1.3B per advisor) and First Manhattan (\$750M) are the most stretched.
-# 4. **Roll-ups are reshaping the top of the market.** About **half of \$10B+ wealth managers have a new controlling owner since 2020**, many backed by private equity (Focus Partners/CD&R, Hightower/THL, Mariner/Leonard Green, Cerity/Genstar). Newly combined firms need to standardise workflows across acquired teams.
-# 5. **Two custodians are the channel.** Schwab and Fidelity each serve over half of \$10B+ wealth managers (Pershing ~17%), a natural partnership route.
-# 6. **Enterprise targets** (growth + current strain + worsening strain): for \$50B+, Cresset, Pathstone, Focus Partners, MAI Capital, Carson, Savant, IEQ, Osaic, Fisher and Wells Fargo Advisors. For \$10B-\$50B, Aptus, RWA Wealth Partners and others (Section 6.3).
+# **Data robustness:** 22 automated checks run every time the notebook runs, and all pass (Section 8.2).
+# **Deliverables:** this notebook · `outputs/nevis_ria_targets.xlsx` (every ranked list, including all-RIA versions, plus the data-check log) · `outputs/ria_firm_year_table.csv` (the analysis-ready firm-year table, ~95k rows).
 #
-# **Data robustness:** 22 automated checks (V0-V21) run on every execution and all pass (Section 1.4). They cover file fingerprints, schema, uniqueness, Form ADV arithmetic identities, reconciliation to SEC totals, cross-year linkage, classification of asset managers vs wealth managers, an IAPD spot check, and independent recomputation of growth rates.
-#
-# **Deliverables:** this notebook · `outputs/nevis_ria_targets.xlsx` (every ranked list, data-check log, custodians, ownership change, full firm table) · `outputs/ria_firm_year_table.csv` (analysis-ready firm-year table, ~95k rows).
 
 # %% [markdown]
 # # 1. Overview
 # ## 1.1 How this workbook is put together and how to run it
 # **Run it:** Runtime → **Run all** (about 4 minutes in Colab). The first run downloads seven SEC roster files (~75 MB) and the SEC bulk Form ADV archive (~1.1 GB, for custodians and ownership), then caches small extracts; reruns use the cache. Every table and chart is also saved in the notebook, so it can be read without running anything.
 #
-# **Layout:** the Colab contents panel (☰, left sidebar) works as the navigation.
+# **Layout:** the Colab contents panel (☰, left sidebar) works as the navigation. Code is collapsed so the page reads as a report; click **Show code** on any cell to see it.
 #
 # | Section | What it contains |
 # |---|---|
-# | **1. Overview** | How to run (1.1), the questions and why they matter (1.2), the data pipeline and method (1.3), data-integrity checks (1.4), code quality and AI use (1.5) |
+# | **1. Overview** | How to run (1.1), the questions and why they matter (1.2), key terms and data dates (1.3), the pipeline that loads, calculates and validates everything (1.4, collapsed) |
 # | **2. Question 1** | RIAs by AUM market segment (FY2025) |
 # | **3. Question 2a** | Fastest-growing firms (1, 3, 5 years) |
 # | **4. Question 2b** | Capacity-strained firms (AUM per advisor) |
 # | **5. Question 3** | Under-staffed firms (AUM growth vs advisor growth) |
-# | **6. Additional data of value** | Custodians (6.1), ownership change / roll-ups (6.2), combined Nevis target list (6.3) |
-# | **7. Export** | Writes the Excel workbook and firm-year CSV |
+# | **6. Bringing it together** | One prioritised Nevis target list combining Q2a, Q2b and Q3 |
+# | **7. Additional supporting data** | Custodians (7.1), ownership change / roll-ups (7.2) |
+# | **8. Process** | How the data was built (8.1), data checks and results (8.2), code quality and AI use (8.3) |
 #
-# **Design principle:** all calculations happen once in Section 1.3 (the *analysis engine*); Sections 2–6 only present results. This keeps the logic in one auditable place and lets Section 1.4 validate the calculations before anything is presented.
+# **Design principle:** all loading, calculation and validation happen once, in Section 1.4, before any result is shown. Critical data checks stop the notebook there, so bad data never reaches Sections 2–7, which only present results. Section 8 explains the process and shows the check results.
 #
-# **Outputs:** `outputs/nevis_ria_targets.xlsx` (every ranked list, top 25 per segment, data-check log, full firm table) · `outputs/ria_firm_year_table.csv` (analysis-ready firm-year table, ~95k rows).
-
-# %%
-import os, re, zipfile, warnings
-from pathlib import Path
-import numpy as np, pandas as pd, requests
-import matplotlib.pyplot as plt
-import matplotlib.ticker as mtick
-warnings.filterwarnings("ignore")
-pd.set_option("display.max_columns", 40); pd.set_option("display.width", 220)
-pd.set_option("display.float_format", lambda x: f"{x:,.2f}")
-
-DATA_DIR = Path(os.environ.get("NEVIS_DATA_DIR", "data"))
-RAW, CACHE, OUT = DATA_DIR / "raw", DATA_DIR / "cache", Path("outputs")
-for p in (RAW, CACHE, OUT): p.mkdir(parents=True, exist_ok=True)
-# SEC fair-access policy: automated requests must identify a name and contact email
-SEC_USER_AGENT = os.environ.get("SEC_USER_AGENT", "Justin McBryan justin.mcbryan@useaffluence.com")
 
 # %% [markdown]
 # ## 1.2 The questions we are solving for, and why
@@ -77,23 +55,49 @@ SEC_USER_AGENT = os.environ.get("SEC_USER_AGENT", "Justin McBryan justin.mcbryan
 # Every question is answered twice: for **all SEC-registered RIAs** (the literal answer) and for **advisor-led wealth managers**, Nevis's ideal customer profile. Unfiltered rankings are dominated by fund managers that aren't Nevis buyers.
 
 # %% [markdown]
-# ## 1.3 The process: from raw SEC filings to this view
-# **Pipeline:** download seven SEC snapshots → standardise 448 columns to the brief's fields → link firms across years by CRD# → clean and flag → validate (1.4) → compute metrics (analysis engine) → present (Sections 2–6).
+# ## 1.3 Key terms and data dates
+# | Term | Meaning in this notebook |
+# |---|---|
+# | **AUM** | Regulatory assets under management as filed on Form ADV (Item 5.F) |
+# | **Wealth manager** | An RIA with 50%+ of AUM from individuals and high-net-worth clients, that offers financial planning and serves clients through registered advisors. Asset managers, fund advisers and robo platforms are excluded; wirehouses are kept |
+# | **Independent RIA / Dual-registered (BD)** | Dual-registered firms are also broker-dealers (wirehouses such as Morgan Stanley, networks such as LPL or Edward Jones) |
+# | **Advisors** | Staff performing investment advisory functions (Form ADV Item 5.B(1)) |
+# | **Annual growth** | Compound annual growth rate (CAGR) between two September filings |
+# | **Staffing gap** | Annual AUM growth minus annual advisor-headcount growth, in percentage points (pts). Positive = each advisor carries more every year |
+# | **Organic / inorganic** | Inorganic = growth by acquisition or re-registration (AUM up 2.5x+ or advisors doubled in one year, or a reported succession). Ranked separately |
+# | **Segment** | FY2025 AUM band: under \$1B, \$1–10B, \$10–50B, over \$50B |
 #
-# ### Step 1: Data sourcing, and why these files
+# | Data | As of | Used in |
+# |---|---|---|
+# | AUM, clients, headcount (latest) | **FY2025**, from the SEC's September 2026 file | Sections 2–6 |
+# | Growth history | FY2020–FY2025 (September 2021–2026 files) | Sections 3, 5, 6 |
+# | Firm name, location, website | November 2026 file (most current) | All tables |
+# | Custodians and ownership | Each firm's latest filing to December 2024 (SEC bulk archive) | Section 7 |
+#
 
 # %% [markdown]
-#
-# | Choice | Reason |
-# |---|---|
-# | **Monthly SEC roster**, not the bulk ADV tables | One row per firm with every Part 1A answer already flattened into columns. Same fields as the bulk data, far less joining risk. |
-# | **One snapshot per year (September)** | Item 5 (AUM, clients, headcount) only has to be refreshed in the **annual updating amendment**, due within 90 days of fiscal year end (Form ADV General Instruction 4). Monthly files in between mostly repeat the same numbers. **Validated by CHECK V12:** 97.4% of firms have identical AUM in Sep and Nov 2026. |
-# | **September specifically** | It is after filing season, so nearly every firm has filed. It exists in all six years (Oct and Nov 2025 are "no data" on the SEC site). Every growth interval is exactly 12 months. |
-# | **November 2026 for firm identity** | Items 1 (name, address, **website**) must be amended *promptly* when they change, so the latest file holds the most current contact details. |
-#
-# **Fiscal-year labelling:** a September 20XX snapshot holds AUM as of each firm's prior fiscal year end (December 20XX-1 for most firms). So the **Sep 2026 file = FY2025**, the latest full-year data set, and results are labelled by fiscal year (FY2020-FY2025). In the code, `year` is the snapshot year and `fiscal_year` = `year` − 1.
+# ## 1.4 Run the pipeline
+# The collapsed cells below download the SEC files, build the firm table, calculate every metric and run all 22 data checks. They are explained in Section 8. Click **Show code** on any cell to see it.
 
 # %%
+#@title Settings
+import os, re, zipfile, warnings
+from pathlib import Path
+import numpy as np, pandas as pd, requests
+import matplotlib.pyplot as plt
+import matplotlib.ticker as mtick
+warnings.filterwarnings("ignore")
+pd.set_option("display.max_columns", 40); pd.set_option("display.width", 220)
+pd.set_option("display.float_format", lambda x: f"{x:,.2f}")
+
+DATA_DIR = Path(os.environ.get("NEVIS_DATA_DIR", "data"))
+RAW, CACHE, OUT = DATA_DIR / "raw", DATA_DIR / "cache", Path("outputs")
+for p in (RAW, CACHE, OUT): p.mkdir(parents=True, exist_ok=True)
+# SEC fair-access policy: automated requests must identify a name and contact email
+SEC_USER_AGENT = os.environ.get("SEC_USER_AGENT", "Justin McBryan justin.mcbryan@useaffluence.com")
+
+# %%
+#@title Step 1: download and read the SEC roster files
 BASE = "https://www.sec.gov/files/investment/data/"
 OLD, NEW = "information-about-registered-investment-advisers-and-exempt-reporting-advisers/", "information-about-registered-investment-advisers-exempt-reporting-advisers/"
 SNAPSHOTS = {
@@ -154,19 +158,11 @@ def read_snapshot(label, url):
     df.to_pickle(cache); return df
 
 raw = {lab: read_snapshot(lab, url) for lab, url in SNAPSHOTS.items()}
-pd.DataFrame({lab: {"firms": len(d), "columns": d.shape[1]} for lab, d in raw.items()}).T
+sources_tbl = pd.DataFrame({lab: {"firms": len(d), "columns": d.shape[1]} for lab, d in raw.items()}).T
 
-# %% [markdown]
-# ### Step 1b: Bulk Form ADV extracts (custodians, ownership, full website lists)
-# The monthly roster doesn't carry Schedule D detail, so these come from the SEC's **bulk Form ADV archive** (all filings Nov 2011 – Dec 2024, ~1.1 GB). Each firm is represented by its **latest filing on or before 31 Dec 2024**; this is the most recent bulk release, a year older than the FY2025 metrics. On first run the two archive files are downloaded and boiled down to three small cached extracts in `data/reference/`; later runs read the cache.
-#
-# | Extract | Form ADV source | Used in |
-# |---|---|---|
-# | `custodians.csv` | Schedule D 5.K(3): custodians holding ≥10% of separately managed account AUM | 6.1 |
-# | `ownership.csv` | Schedules A/B (owners and control persons, with date acquired), Schedule D 4 (successions) | 6.2, 6.3 |
-# | `websites.csv` | Schedule D 1.I: every website and social account listed | Step 3 |
 
 # %%
+#@title Step 1b: extract custodians, ownership and websites from the bulk archive
 REF = DATA_DIR / "reference"; REF.mkdir(parents=True, exist_ok=True)
 REF_FILES = {k: REF / f"{k}.csv" for k in ("custodians", "ownership", "websites")}
 
@@ -241,26 +237,11 @@ if any(stale(k) for k in REF_FILES):
     build_reference()
 ref = {k: pd.read_csv(f, dtype={"crd": str}) for k, f in REF_FILES.items()}
 ref["ownership"] = ref["ownership"].set_index("crd")
-{k: f"{len(v):,} rows" for k, v in ref.items()}
+ref_rows = {k: f"{len(v):,} rows" for k, v in ref.items()}
 
-# %% [markdown]
-# ### Step 2: Field mapping (Form ADV item → analysis field)
-#
-# | Field | Form ADV source | Treatment |
-# |---|---|---|
-# | SEC# | Item 1.D (801-xxxxx) | As filed |
-# | Join key | Item 1.E **CRD#** | Stable across renames; used to link years |
-# | Firm name, City, State | Items 1.B, 1.F | From **Nov 2026** (most current) |
-# | Website | Item 1.I / Sched. D 1.I | See data-quality note below |
-# | AUM | Item 5.F(2)(c) | Total regulatory AUM, USD |
-# | Clients | Sum of Item 5.D(x)(1) across client types | "Fewer than 5" boxes imputed at 2.5 |
-# | Employees | Item 5.A | Excludes clerical staff by definition |
-# | Advisors | Item 5.B(1) | Staff performing investment advisory functions (incl. research) |
-# | IARs (cross-check) | Item 5.B(3) | Registered investment adviser reps, closer to "client-facing advisors" |
-# | Retail AUM share (added) | (5.D(a)(3)+5.D(b)(3)) / AUM | Share of AUM from individuals + HNW, used to identify **wealth managers** |
-# | Filing date | "Latest ADV Filing Date" | As filed |
 
 # %%
+#@title Step 2: standardise fields
 CLIENT_TYPES = list("abcdefghijklmn")
 SOCIAL = re.compile(r"linkedin|facebook|twitter|(^|\.)x\.com$|instagram|youtube|tiktok|vimeo|spotify|yelp|pinterest|"
                     r"medium\.com|podcasts\.apple|podbean|threads\.net|bsky|substack|flickr|goo\.gl|bit\.ly|linktr\.ee|douyin|weibo|wechat|glassdoor|indeed\.com|jobs|careers|amazon\.com|wordpress\.com|soundcloud|iheart|apple\.com|blogspot", re.I)
@@ -302,15 +283,10 @@ def standardise(r, label):
 
 std = {lab: standardise(r, lab) for lab, r in raw.items()}
 panel = pd.concat([std[l] for l in std if l.endswith("-09")], ignore_index=True)
-print("Firm-year rows:", len(panel), "| duplicate CRD within a year:", panel.duplicated(["crd", "year"]).sum())
 
-# %% [markdown]
-# ### Step 3: Website data-quality fix
-# The SEC roster carries **only one** of a firm's listed web addresses (68% of firms list several), and about a third of the time that one is a **social profile**. Beacon Pointe, the example in the brief, shows Pinterest in the latest file.
-# **Fix applied:** combine the full list from **Schedule D 1.I** (bulk archive, every address the firm lists) with every *non-social* address shown in the seven roster snapshots; prefer the most recent one that **matches the firm's name**, otherwise the most recent one. `website_source` records which filing it came from and `website_confidence` whether it matched the name. That second flag matters for broker-dealer networks such as Osaic or Cetera, whose roster entry often shows an individual advisor's site.
-#
 
 # %%
+#@title Step 3: fix websites
 order = ["2026-11", "2026-09", "2025-09", "2024-09", "2023-09", "2022-09", "2021-09"]
 STOP = {"llc", "inc", "lp", "llp", "ltd", "the", "and", "group", "capital", "management", "advisors", "advisers", "advisory",
         "wealth", "financial", "partners", "investment", "investments", "asset", "services", "company", "corp", "corporation", "trust"}
@@ -346,20 +322,16 @@ web = pd.DataFrame(rows, columns=["crd", "website", "website_source", "website_c
 VERIFIED = {"119290": "www.beaconpointe.com",      # Beacon Pointe Advisors
             "Pathstone": "www.pathstone.com", "Focus Partners Wealth": "www.focuspartners.com",
             "CWM, LLC": "www.carsonwealth.com", "Osaic Wealth": "www.osaic.com", "Fisher Investments": "www.fisherinvestments.com",
-            "Cetera Investment Advisers": "www.cetera.com", "NewEdge Advisors": "www.newedgewealth.com"}
+            "Cetera Investment Advisers": "www.cetera.com", "NewEdge Advisors": "www.newedgewealth.com",
+            "105674": "www.clearstead.com"}            # Clearstead (roster shows a podcast page)
 for key, site in VERIFIED.items():
     crds = [key] if key.isdigit() else names[names.str.upper().str.startswith(key.upper())].index.tolist()
     for c in crds:
         web = pd.concat([web[web.crd != c], pd.DataFrame([[c, site, "analyst-verified (web search)", "verified"]], columns=web.columns)])
-print(web.website_confidence.value_counts(normalize=True).round(3).to_dict())
-print("Beacon Pointe raw website field by snapshot:",
-      {l: std[l].loc[std[l].crd == "119290", "website_raw"].squeeze() for l in ["2023-09", "2025-09", "2026-11"]})
 
-# %% [markdown]
-# ### Step 4: The analysis-ready firm table
-# One row per firm per snapshot year. Identity fields come from the latest file; metrics come from each September.
 
 # %%
+#@title Step 4: build the firm table
 ident_cols = ["crd", "sec_number", "firm_name", "city", "state", "country"]
 ident = pd.concat([std["2026-11"][ident_cols], std["2026-09"][ident_cols]]).drop_duplicates("crd")
 ident = ident.merge(web, on="crd", how="left")
@@ -384,34 +356,10 @@ cols = ["sec_number", "firm_name", "website", "website_source", "website_confide
 firm_year = firm_year[cols].sort_values(["year", "aum"], ascending=[True, False])
 firm_year.to_csv(OUT / "ria_firm_year_table.csv", index=False)
 latest = firm_year[firm_year.year == 2026].copy()
-latest.head(10)
 
-# %% [markdown]
-# ### Step 5: Analytical method
-# * **Growth = CAGR** between September snapshots: 1-year = FY2024→FY2025, 3-year = FY2022→FY2025, 5-year = FY2020→FY2025. Firms must exist at both ends.
-# * **Minimum starting AUM scaled to the segment** (20% of the segment floor, never below \$100M): \$100M for <\$1B, \$200M for \$1B-\$10B, \$2B for \$10B-\$50B, \$10B for >\$50B. This stops a \$100M → \$15B re-registration from "winning" the larger segments.
-# * **Headcount reclassification flag:** advisor count falling more than 60% in a single year (e.g. Vanguard 301 → 19) is a change in how Item 5.B(1) was answered, not attrition. Excluded from the ranked lists.
-# * **Inorganic / step-change flag:** any single year where AUM grew more than 2.5x or advisor headcount more than doubled, or a reported succession (Item 4.A). These are usually acquisitions, re-registrations or roll-ups into a new entity. They are **ranked separately** so the main lists show sustained growth.
-# * **Excess growth** = firm CAGR minus its segment's median CAGR, which strips out the market tailwind every firm shared.
-# * **Segment = FY2025 AUM.** Firms are compared with the peers they are today.
-# * **Advisor-led wealth manager view (Nevis ICP):** at least 50% of AUM from individuals or HNW clients, offers financial planning (5.G(1)), has registered IARs, and no more than 500 clients per advisor. Wirehouse and bank channels that are themselves broker-dealers with 100+ IARs (e.g. Merrill, PNC) also qualify. Wirehouses and broker-dealers stay in and are tagged in a `channel` column: **Dual-registered (broker-dealer)**, i.e. the adviser is itself a broker-dealer (wirehouses such as Morgan Stanley, IBDs such as Edward Jones or LPL, and smaller hybrid firms), vs **Independent RIA**. The last test removes robo-advisors, TAMPs and model-delivery platforms, which also serve "individuals" but aren't advisor-led. The unfiltered lists are dominated by asset managers and fund advisers.
-#
-# **Assumptions & limitations**
-# * **Universe:** SEC-registered advisers only. State-registered RIAs (generally under \$100M) are not in SEC data, which is immaterial for Nevis's market.
-# * **AUM timing:** September snapshots reflect each firm's last annual amendment, so AUM is mostly as of the prior fiscal year end.
-# * **Advisors** = Item 5.B(1), which includes research staff; **IARs** (5.B(3)) shown alongside as the client-facing proxy. Either can be zero for firms that sub-advise.
-# * **Clients** = sum of Item 5.D counts; "fewer than 5" imputed at 2.5. Funds count as one client, which is why fund managers show few clients and huge AUM per client.
-# * **Growth is nominal** and includes market returns; *excess growth* versus the segment median controls for this.
-# * **M&A:** succession (Item 4.A) is only in the snapshot from 2023; earlier deals are caught by the step-change rules (AUM >2.5x or advisors >2x in a year). Roll-ups that keep acquired firms as separate registrants won't show up as growth here.
-# * **Advisor-led definition** is a rules-based proxy; some hybrid firms (e.g. OCIO or family-office models) will sit on either side of the line.
-# * **Website:** one address per firm in the roster (see 2a). Firms listed only a social profile are labelled in `website_source`.
-# * **Custodians** (Schedule D 5.K(3)) are not in the roster. Adding them from the bulk ADV data would show which custodian channels reach Nevis's best targets.
-
-# %% [markdown]
-# ### Step 6: Analysis engine
-# All metrics for Sections 2–6 are calculated in the cell below.
 
 # %%
+#@title Steps 5-6: analysis engine (all metrics)
 # ===================== ANALYSIS ENGINE =====================
 # Every metric used in Sections 2-6 is computed here, once. Presentation cells only display these objects.
 
@@ -522,6 +470,11 @@ def custodian_share(mask_df):
 cust_views = {"All RIAs >$50B": latest.aum >= 50e9, "Wealth managers >$50B": (latest.aum >= 50e9) & wmask,
               "Wealth managers $10B-$50B": (latest.segment == "$10B-$50B") & wmask, "Wealth managers $1B-$10B": (latest.segment == "$1B-$10B") & wmask}
 cust_tables = {k: custodian_share(m) for k, m in cust_views.items()}
+# Analyst-verified exclusions: these filings show an internal holding-company restructure, not a sale to a new owner
+# (validated against external sources), so they are not ownership-change signals.
+INTERNAL_RESTRUCTURE = {"149777": "Morgan Stanley: new controlling entity is an internal Morgan Stanley company",
+                        "250": "Edward Jones: JFC Holding / The Jones Financial Companies are the firm's own partnership structure"}
+ref["ownership"].loc[ref["ownership"].index.isin(list(INTERNAL_RESTRUCTURE)), ["new_controlling_entity_since_2020", "likely_pe_sponsor_owner"]] = False
 own = latest[wmask & (latest.aum >= 1e9)].set_index("crd")[["firm_name", "channel", "state", "aum", "advisors", "segment"]].join(ref["ownership"])
 own["ownership_change"] = own.new_controlling_entity_since_2020.fillna(False).astype(bool) | (own.successions_since_2020.fillna(0) > 0)
 own_summary = own.groupby("segment", observed=True).agg(
@@ -529,54 +482,9 @@ own_summary = own.groupby("segment", observed=True).agg(
     new_controlling_entity=("new_controlling_entity_since_2020", "mean"), likely_pe_sponsor=("likely_pe_sponsor_owner", "mean"),
     any_succession=("successions_since_2020", lambda x: (x > 0).mean()))
 
-print("Engine complete:", {k: len(v) for k, v in {"firms FY2025": latest, "1y window": win[1], "3y window": win[3], "5y window": win[5], "targets": targets}.items()})
-window_summary
-
-# %% [markdown]
-# ## 1.4 Data checks: integrity of the data and accuracy of the calculations
-# Every check below runs automatically each time the notebook runs and is labelled `CHECK Vn` in the code. **Critical** checks stop the notebook if they fail (bad data never reaches the analysis); **warnings** are reported and explained.
-#
-# | ID | What it proves |
-# |---|---|
-# | V0 | Source files (7 snapshots + 2 bulk archives) are byte-identical to the ones analysed (size + SHA-256 fingerprint) |
-# | V1 | Every snapshot contains every Form ADV field the analysis uses, despite the 262 → 448 column change in 2023 |
-# | V2 | Firm counts are in a plausible range and grow steadily (no truncated or partial files) |
-# | V3 | Exactly one row per firm (CRD#) per snapshot, so no double counting |
-# | V4 | Identifiers are well-formed (SEC# = 801-XXXXX, CRD# numeric) |
-# | V5 | Numeric fields parse cleanly (commas, blanks, text), with no silent data loss |
-# | V6 | AUM identity holds: discretionary + non-discretionary = total (Item 5.F(2)) |
-# | V7 | AUM by client type (Item 5.D) sums to total AUM, as Form ADV requires |
-# | V8 | No negative AUM, client or headcount values |
-# | V9 | Advisor headcount ≤ total employees (Item 5.B(1) vs 5.A) |
-# | V10 | Total regulatory AUM reconciles with SEC-published industry totals (~\$125T-\$128T in 2023) |
-# | V11 | Firms link cleanly across years by CRD# (year-on-year match rate) |
-# | V12 | September vs November 2026 AUM is almost unchanged, validating the "AUM updates annually" design choice |
-# | V13 | Spot check vs the SEC's public IAPD profile: Beacon Pointe (the brief's example firm) |
-# | V14 | Segment counts add up to the full FY2025 universe (no firm dropped or double-counted) |
-# | V15 | No infinite or impossible values in any derived ratio or growth rate |
-# | V16 | Growth figures reproduce from raw: CAGR independently recomputed from source AUM for 600 random firms |
-# | V17 | Ranked lists respect their own rules (min starting AUM, inorganic and reclassified firms excluded) |
-# | V18 | Website coverage and confidence are reported (data-quality transparency) |
-#
-# | V19 | Classification is right: known asset managers excluded; known wealth managers and wirehouses included |
-# | V20 | Bulk-archive extracts (custodians, ownership) link to ≥95% of \$1B+ wealth managers |
-# | V21 | Custodian names are standardised (Schwab, Fidelity, Pershing…) for ≥90% of custodian-held AUM |
-#
-# V0-V13 test the **data**; V14-V21 test the **calculations** and derived classifications.
-
-# %% [markdown]
-# **Headline reconciliation:** firm counts and total regulatory AUM by snapshot.
 
 # %%
-qc = panel.groupby("year").agg(firms=("crd", "nunique"), total_raum_trn=("aum", lambda x: x.sum() / 1e12),
-                               median_aum_mn=("aum", lambda x: x.median() / 1e6), zero_aum=("aum", lambda x: (x == 0).sum()),
-                               zero_advisors=("advisors", lambda x: (x == 0).sum()), missing_advisors=("advisors", lambda x: x.isna().sum()))
-qc
-
-# %% [markdown]
-# Totals reconcile with published SEC figures (about \$125T to \$128T of regulatory AUM in 2023). The 2026 step-up is market-driven and concentrated in the largest asset managers (Vanguard, Fidelity, BlackRock, PIMCO). Zero-advisor and zero-AUM firms are kept in the counts but excluded from any ratio that divides by them.
-
-# %%
+#@title Data checks V0-V13 (data integrity)
 import hashlib
 checks = []
 def check(cid, name, passed, detail, critical=True):
@@ -675,6 +583,7 @@ check("V13", "Beacon Pointe matches IAPD (AUM ≈ $54.9B, 440 advisors, Newport 
 
 
 # %%
+#@title Data checks V14-V21 (calculations)
 # CHECK V14: segment counts reconcile to universe
 check("V14", "Segment counts sum to all FY2025 RIAs", int(seg.RIAs.sum()) == len(latest) == raw["2026-09"].shape[0],
       f"{int(seg.RIAs.sum()):,} = {len(latest):,} = {raw['2026-09'].shape[0]:,}")
@@ -727,159 +636,262 @@ share_mapped = (mapped.raum_at_custodian * mapped.canonical).sum() / mapped.raum
 check("V21", "≥90% of $1B+ wealth-manager custodian AUM mapped to a standard name", share_mapped >= 0.9, f"{share_mapped:.1%} of custodian-held AUM mapped", critical=False)
 
 summary = pd.DataFrame(checks).set_index("id")
-print(f"{(summary.result == 'PASS').sum()} PASS · {(summary.result == 'WARN').sum()} WARN · {(summary.result == 'FAIL').sum()} FAIL")
-summary
+print(f"Data checks complete: {(summary.result == 'PASS').sum()} PASS · {(summary.result == 'WARN').sum()} WARN · {(summary.result == 'FAIL').sum()} FAIL (full results in Section 8.2)")
+
+
+# %%
+#@title Presentation helpers (table formatting)
+import re
+from IPython.display import HTML, display
+PLAIN = {"segment": "Segment", "firm_name": "Firm", "channel": "Channel", "state": "State", "city": "City", "website": "Website",
+         "aum": "AUM ($B)", "aum_start": "AUM at start ($B)", "aum_end": "AUM FY2025 ($B)", "aum_cagr": "AUM growth / yr",
+         "advisor_cagr": "Advisor growth / yr", "staffing_gap": "Staffing gap", "excess_growth": "vs segment median",
+         "aum_per_advisor": "AUM per advisor ($M)", "clients_per_advisor": "Clients per advisor", "advisors": "Advisors",
+         "adv_start": "Advisors at start", "adv_end": "Advisors FY2025", "nevis_score": "Nevis score",
+         "new_controlling_entity_since_2020": "New owner since 2020", "likely_pe_sponsor_owner": "Likely PE-backed",
+         "control_acquired_date": "Control acquired", "new_controlling_entities": "New controlling owner(s)"}
+CHANNEL_SHORT = {"Dual-registered (broker-dealer)": "Dual-registered (BD)"}
+BN, PCT, PTS = {"aum", "aum_start", "aum_end"}, {"aum_cagr", "advisor_cagr"}, {"staffing_gap", "excess_growth"}
+INT = {"advisors", "adv_start", "adv_end", "clients_per_advisor", "nevis_score", "aum_per_advisor"}
+SUFFIX = re.compile(r"[,\s]+(LLC|L\.L\.C\.?|L\.L\.L\.P\.?|LLP|L\.P\.?|LP|INC\.?|INCORPORATED|CORP\.?|CORPORATION|LTD\.?)\.?$", re.I)
+CAMEL = {"Newedge": "NewEdge", "Cliftonlarsonallen": "CliftonLarsonAllen", "Onepoint": "OnePoint", "Bfg": "BFG"}
+KEEP_UPPER = {"CWM", "MML", "BFG", "IEQ", "MAI", "RWA", "PGI", "EP", "SCS", "AE", "RBC", "MWA", "PAG", "CIBC", "BBR", "UBS", "LPL", "PNC", "HSBC", "USA", "II", "III", "IV", "CPA", "CPAS", "NY", "SEI", "BNY", "WWM"}
+def nice_name(s):
+    """SEC names are filed in capitals with legal suffixes: show 'Cresset Asset Management' rather than 'CRESSET ASSET MANAGEMENT, LLC'."""
+    s = str(s).split(";")[0].strip()
+    for _ in range(2): s = SUFFIX.sub("", s).strip().rstrip(",")
+    words = []
+    for w in s.split():
+        core = re.sub(r"[^A-Za-z]", "", w)
+        words.append(w if core.upper() in KEEP_UPPER or (core and not re.search(r"[AEIOUY]", core.upper()) and len(core) <= 4) else w.capitalize())
+    return " ".join(CAMEL.get(w, w) for w in words).replace("'S ", "'s ")
+TEXT_COLS = {"segment", "firm_name", "channel", "state", "city", "website", "new_controlling_entities", "control_acquired_date",
+             "new_controlling_entity_since_2020", "likely_pe_sponsor_owner"}
+CAPTION_CSS = [{"selector": "td", "props": "white-space: nowrap"},{"selector": "caption", "props": "caption-side: top; text-align: left; font-weight: 600; font-size: 1.05em; padding: 4px 0 8px"}]
+
+def show(df, caption, cols=None, n=None, sort=None):
+    """Display a ranked table: plain-English headers, consistent number formats, largest segment first."""
+    d = df.copy()
+    if sort: d = d.sort_values(["segment", sort], ascending=[False, False]) if "segment" in d else d.sort_values(sort, ascending=False)
+    if n is not None: d = d.groupby("segment", observed=True, group_keys=False, sort=False).head(n) if "segment" in d else d.head(n)
+    if cols: d = d[cols]
+    if "segment" in d: d["segment"] = d.segment.astype(str)
+    if "firm_name" in d: d["firm_name"] = d.firm_name.map(nice_name)
+    if "channel" in d: d["channel"] = d.channel.replace(CHANNEL_SHORT)
+    for c in BN & set(d): d[c] = d[c] / 1e9
+    if "aum_per_advisor" in d: d["aum_per_advisor"] = d.aum_per_advisor / 1e6
+    for c in ["new_controlling_entity_since_2020", "likely_pe_sponsor_owner"]:
+        if c in d: d[c] = d[c].map({True: "Yes"}).fillna("")
+    if "new_controlling_entities" in d: d["new_controlling_entities"] = d.new_controlling_entities.fillna("").astype(str).str.slice(0, 70)
+    f = {}
+    for c in d:
+        if c in BN: f[c] = "{:,.1f}"
+        elif c in PCT: f[c] = "{:.0%}"
+        elif c in PTS: f[c] = lambda x: f"{x * 100:+.0f} pts"
+        elif c in INT: f[c] = "{:,.0f}"
+    text = [PLAIN.get(c, c) for c in d if c in TEXT_COLS]
+    left = {c: [{"selector": "th", "props": "text-align: left"}] for c in text}
+    return (d.rename(columns=PLAIN).style.hide(axis="index").set_caption(caption).set_table_styles(CAPTION_CSS)
+             .set_table_styles(left, overwrite=False).set_properties(subset=text, **{"text-align": "left"})
+             .format({PLAIN.get(k, k): v for k, v in f.items()}, na_rep="–"))
+
+def collapsible(label, *tables):
+    """Fold secondary tables into a click-to-expand section."""
+    display(HTML(f"<details><summary><b>{label}</b></summary>" + "<br>".join(t.to_html() for t in tables) + "</details>"))
+
+def styled(df, caption, fmt=None):
+    return df.style.set_caption(caption).set_table_styles(CAPTION_CSS).format(fmt or {}, na_rep="–")
+
+
 
 # %% [markdown]
-# ## 1.5 Code quality: making this legible and easy to consume
-# * **One notebook, top to bottom:** Run all reproduces every number from the raw SEC files; no hidden state or manual steps.
-# * **Separation of concerns:** configuration (1.1) → data pipeline (1.3, Steps 1–4) → analysis engine (Step 6) → validation (1.4) → presentation (2–6) → export (7).
-# * **Small named functions:** `fetch`, `read_snapshot`, `standardise`, `domain`, `window`, `top_by_segment`, `fmt`, `check`, each doing one job.
-# * **Configuration in one place:** SEC URLs, file fingerprints, segment bands (`BINS`), thresholds (`MIN_START`) and the ICP definition are defined once and reused.
-# * **Self-documenting outputs:** every table states its universe, horizon and filters; field names map to Form ADV items (Step 2).
-# * **Fail loudly:** 19 labelled checks (`CHECK Vn`), with critical ones stopping execution.
-# * **Reproducible:** cached downloads, SHA-256 file fingerprints, fixed random seed for sampling checks, pinned dependencies in `requirements.txt`.
-# * **Reviewable:** `nevis_ria_analysis.py` is the same notebook as plain text (jupytext), so code changes diff cleanly on GitHub.
+# # 2. Q1 Market segments: 6,940 wealth managers, about 1,300 of them above \$1B
+# **Question:** How many RIAs fall into each AUM market segment?
 #
-# ### How AI was used
-# This analysis was built with **Claude (Anthropic) working agentically**, with me directing and checking at each step:
-# * **Sourcing:** Claude browsed the SEC site, listed every monthly file with its size, and spotted that October and November 2025 are "no data" placeholders. That's why the series uses September.
-# * **Schema mapping:** compared all 448 columns across seven files (2021-22 have 262 columns), confirmed the core Item 5 fields were stable, and mapped each brief field to its Form ADV item.
-# * **Code:** wrote the pipeline and notebook, then ran it end to end.
-# * **Catching data traps:** the one-website-per-firm limitation (found via the brief's own Beacon Pointe example), base-effect and re-registration "growth", robo/TAMP platforms passing a naive wealth-manager filter, and advisor-count reclassifications. Each became an explicit, documented rule.
-# * **Human judgement:** snapshot timing (September for metrics, November for identity, grounded in Form ADV General Instruction 4), the ICP definition, thresholds, and the commercial framing are mine.
-# * **Verification:** 19 automated checks (Sections 4a and 12a) built with Claude and reviewed by me; totals reconcile with published SEC figures; zero duplicate firm-years; Beacon Pointe matches its IAPD profile (\$54.9B, 440 advisors, Newport Beach); target-firm websites spot-checked by web search.
+# *Segments use each firm's FY2025 total AUM from the SEC's September 2026 file.*
 
 # %% [markdown]
-# # 2. Question 1: How many RIAs fall into each AUM market segment? (FY2025)
-# Segments use FY2025 regulatory AUM (Item 5.F(2)(c)) from the latest annual filings (Sep 2026 snapshot).
-
-# %%
-q1 = seg[["RIAs", "wealth_managers", "share_of_firms", "share_of_aum"]].copy()
-q1["wealth_manager_aum_trn"] = latest[wmask].groupby("segment", observed=False).aum.sum() / 1e12
-q1["wirehouse_bd"] = latest[wmask & latest.channel.eq("Dual-registered (broker-dealer)")].groupby("segment", observed=False).size()
-q1["independent_ria"] = q1.wealth_managers - q1.wirehouse_bd
-q1.loc["Total"] = q1.sum(numeric_only=True)
-q1.rename(columns={"RIAs": "All SEC RIAs", "wealth_managers": "Wealth managers", "share_of_firms": "All RIAs: share of firms",
-                   "share_of_aum": "All RIAs: share of AUM", "wealth_manager_aum_trn": "Wealth-manager AUM $T",
-                   "wirehouse_bd": "of which wirehouse / BD", "independent_ria": "of which independent RIA"})
-
-# %%
-wm_seg = latest[wmask].groupby("segment", observed=False).agg(firms=("crd", "count"), aum=("aum", lambda x: x.sum() / 1e12))
-fig, ax = plt.subplots(1, 2, figsize=(12, 4))
-wm_seg.firms.plot.bar(ax=ax[0], color="#473BCE"); ax[0].set_title("Wealth managers by AUM segment (FY2025)")
-for i, v in enumerate(wm_seg.firms): ax[0].text(i, v, f"{v:,}", ha="center", va="bottom")
-(wm_seg.aum / wm_seg.aum.sum() * 100).plot.bar(ax=ax[1], color="#9C94E6"); ax[1].set_title("Share of wealth-manager AUM (%)")
-for a in ax: a.set_xlabel(""); a.tick_params(axis="x", rotation=0)
-plt.tight_layout(); plt.show()
-
-# %% [markdown]
-# **Commentary.**
+# **Key takeaways**
 # * **All RIAs vs wealth managers:** two-thirds of SEC RIAs are under \$1B, and the 432 firms above \$50B hold 79% of all assets. But that top tier is overwhelmingly asset managers. Only **44 of the 432 are wealth managers**.
 # * **The Nevis market is 6,940 wealth managers.** About 1,300 are above \$1B and **159 are Enterprise-scale (\$10B+)**: short enough for named-account selling. The ~5,600 firms under \$1B suit a product-led motion.
 # * **Dual-registered firms** (wirehouses, IBDs) are few in number (224) but enormous in scale: Morgan Stanley, Merrill, Edward Jones, UBS, LPL and Wells Fargo Advisors account for most wealth-manager AUM above \$50B.
 
-# %% [markdown]
-# # 3. Question 2a: Who are the fastest-growing firms?
-# AUM CAGR over 1 year (FY2024→FY2025), 3 years (FY2022→FY2025) and 5 years (FY2020→FY2025), sustained growth only (inorganic step-changes shown separately).
+# %%
+#@title
+q1 = seg[["RIAs", "share_of_firms", "share_of_aum", "wealth_managers"]].copy()
+q1["independent_ria"] = latest[wmask & latest.channel.eq("Independent RIA")].groupby("segment", observed=False).size()
+q1["wirehouse_bd"] = latest[wmask & latest.channel.eq("Dual-registered (broker-dealer)")].groupby("segment", observed=False).size()
+q1["wealth_manager_aum_trn"] = latest[wmask].groupby("segment", observed=False).aum.sum() / 1e12
+q1.loc["Total"] = q1.sum(numeric_only=True)
+q1.index = q1.index.astype(str); q1.index.name = "Segment (FY2025 AUM)"
+q1 = q1.rename(columns={"RIAs": "All SEC RIAs", "share_of_firms": "Share of firms", "share_of_aum": "Share of AUM",
+                        "wealth_managers": "Wealth managers", "independent_ria": "of which independent RIA",
+                        "wirehouse_bd": "of which dual-registered (BD)", "wealth_manager_aum_trn": "Wealth-manager AUM ($T)"})
+styled(q1, "RIAs and wealth managers by AUM segment (FY2025)",
+       {"All SEC RIAs": "{:,.0f}", "Share of firms": "{:.0%}", "Share of AUM": "{:.0%}", "Wealth managers": "{:,.0f}",
+        "of which independent RIA": "{:,.0f}", "of which dual-registered (BD)": "{:,.0f}", "Wealth-manager AUM ($T)": "{:,.1f}"})
 
 # %%
-print("Fastest-growing wealth managers: 3-year AUM CAGR (FY2022→FY2025)"); fmt(fast_wm[3])
-
-# %%
-print("Fastest-growing wealth managers: 1-year AUM growth (FY2024→FY2025)"); fmt(fast_wm[1])
-
-# %%
-print("Fastest-growing wealth managers: 5-year AUM CAGR (FY2020→FY2025)"); fmt(fast_wm[5])
-
-# %%
-print("Inorganic / step-change movers, 3-year (acquisitions, re-registrations, roll-ups): advisor-led wealth managers")
-fmt(inorganic_wm)
-
-# %% [markdown]
-# **Commentary.**
-# * **Sustained growth at scale:** multi-billion-dollar wealth managers compounding at 60-70%+ a year (Waverly, Arkadios, Apella, Pathstone, Merit). Growth more than 50pp above the segment median shows this isn't just the market.
-# * **The inorganic list is a sales signal in its own right.** Firms that grew by acquisition or consolidation (Focus Partners, Osaic, Cetera) are integrating acquired teams, each with its own workflows and tech stack. See Section 6.2.
-# * The 1-year view is noisier and is best read alongside the 3- and 5-year views. Lists for all RIAs (including asset managers) are in the Excel file.
-
-# %% [markdown]
-# # 4. Question 2b: Which firms are capacity-strained?
-# Measured on FY2025 data, firms with at least 3 advisors (so single-person shops don't dominate). Shown for all RIAs (the literal answer) and for wealth managers, where **clients per advisor** is shown too. For a wealth manager, clients per advisor is the truer measure of strain, because advisor time scales with relationships, not dollars.
-
-# %%
-print("Highest AUM per advisor: wealth managers (FY2025, 3+ advisors)"); fmt(cap_wm)
-
-# %%
-fig, ax = plt.subplots(figsize=(10, 4))
-data = [cap[(cap.segment == s) & cap.wealth_manager].aum_per_advisor.dropna() / 1e6 for s in LABELS]
-ax.boxplot(data, labels=LABELS, showfliers=False); ax.set_yscale("log")
-ax.set_ylabel("AUM per advisor ($M, log)"); ax.set_title("Wealth managers: AUM per advisor by segment (FY2025)")
+#@title
+wm_seg = latest[wmask].groupby("segment", observed=False).agg(firms=("crd", "count"), aum=("aum", lambda x: x.sum() / 1e12))
+big = wm_seg.loc[["$10B-$50B", ">$50B"]]
+fig, ax = plt.subplots(1, 2, figsize=(12, 4))
+wm_seg.firms.plot.bar(ax=ax[0], color="#473BCE"); ax[0].set_title("Number of wealth managers")
+for i, v in enumerate(wm_seg.firms): ax[0].text(i, v, f"{v:,}", ha="center", va="bottom")
+share = wm_seg.aum / wm_seg.aum.sum() * 100
+share.plot.bar(ax=ax[1], color="#9C94E6"); ax[1].set_title("Share of wealth-manager AUM (%)")
+for i, v in enumerate(share): ax[1].text(i, v, f"{v:.0f}%", ha="center", va="bottom")
+for a in ax: a.set_xlabel(""); a.tick_params(axis="x", rotation=0); a.set_xticklabels([l.replace("$", r"\$") for l in LABELS])
+fig.suptitle(f"Most wealth managers are under \\$1B, but the {int(big.firms.sum())} above \\$10B hold {big.aum.sum() / wm_seg.aum.sum():.0%} of wealth-manager AUM",
+             fontweight="bold")
 plt.tight_layout(); plt.show()
-cap_medians
 
 # %% [markdown]
-# **Commentary.**
-# * **Typical load:** a \$1B+ wealth manager runs about \$120M-\$130M of AUM and 60-80 clients per advisor (table above). Firms far above this are the most stretched.
+# # 3. Q2a Fastest growing: the leaders grew 60–70% a year, about five times the market
+# **Question:** Who are the fastest-growing firms?
+#
+# *Annual AUM growth over 3 years (main view), with 1- and 5-year views below. Organic growth only: firms that grew by acquisition or re-registration are listed separately. Wealth managers only; versions covering all RIAs are in the Excel file.*
+
+# %% [markdown]
+# **Key takeaways**
+# * **Sustained growth at scale:** multi-billion-dollar wealth managers compounding at 60-70%+ a year (Waverly, Arkadios, Apella, Pathstone, Merit). Growth 50+ percentage points above the segment median shows this isn't just the market.
+# * **The inorganic list is a sales signal in its own right.** Firms that grew by acquisition or consolidation (Focus Partners, Osaic, Cetera) are integrating acquired teams, each with its own workflows and tech stack. See Section 7.2.
+# * The 1-year view is noisier; read it alongside the 3- and 5-year views (click to expand below the main table).
+
+# %%
+#@title
+show(fast_wm[3], "Fastest-growing wealth managers: annual AUM growth over 3 years (FY2022→FY2025), top 5 per segment",
+     cols=["segment", "firm_name", "channel", "state", "aum_start", "aum_end", "aum_cagr", "excess_growth"], n=5, sort="aum_cagr")
+
+# %%
+#@title
+collapsible("Show the 1-year and 5-year views",
+    show(fast_wm[1], "1-year AUM growth (FY2024→FY2025), top 5 per segment", cols=["segment", "firm_name", "channel", "state", "aum_start", "aum_end", "aum_cagr", "excess_growth"], n=5, sort="aum_cagr"),
+    show(fast_wm[5], "Annual AUM growth over 5 years (FY2020→FY2025), top 5 per segment", cols=["segment", "firm_name", "channel", "state", "aum_start", "aum_end", "aum_cagr", "excess_growth"], n=5, sort="aum_cagr"))
+
+# %%
+#@title
+show(inorganic_wm, "Grew by acquisition or consolidation (inorganic), 3 years: wealth managers, top 5 per segment",
+     cols=["segment", "firm_name", "channel", "aum_start", "aum_end", "aum_cagr", "adv_start", "adv_end"], sort="aum_cagr")
+
+# %% [markdown]
+# # 4. Q2b Capacity strain: a typical advisor runs about \$125M; the most stretched run 5–10 times that
+# **Question:** Which firms are capacity-strained?
+#
+# *FY2025 AUM and clients per advisor, firms with 3+ advisors. For wealth managers, clients per advisor matters as much as AUM, because advisor time scales with relationships, not dollars.*
+
+# %% [markdown]
+# **Key takeaways**
+# * **Typical load:** a \$1B+ wealth manager runs about \$120M-\$130M of AUM and 60-80 clients per advisor (median table below). Firms far above this are the most stretched.
 # * **Two kinds of strain.** High AUM per advisor with few clients (Circle Wealth, Prowell, First Manhattan) usually means ultra-high-net-worth or family-office models: fewer, deeper relationships where the pain is preparation and reporting quality. High clients per advisor (150-300+) means volume pain: meetings, follow-ups and compliance notes. Each suggests a different Nevis pitch.
 # * All-RIA rankings (which are dominated by fund complexes such as Vanguard) are in the Excel file.
 
-# %% [markdown]
-# # 5. Question 3: Which RIAs appear under-staffed?
-# **Staffing gap = AUM CAGR minus advisor-headcount CAGR** over 1, 3 and 5 years. A positive gap means each advisor is carrying more AUM every year. Requires at least 3 advisors at the start of the window (so 1→2 hires don't create noise) and the segment minimum starting AUM, and excludes inorganic step-changes.
+# %%
+#@title
+show(cap_wm, "Highest AUM per advisor: wealth managers with 3+ advisors (FY2025), top 5 per segment",
+     cols=["segment", "firm_name", "channel", "state", "aum", "advisors", "aum_per_advisor", "clients_per_advisor"], n=5, sort="aum_per_advisor")
 
 # %%
-print("Under-staffed wealth managers: 3-year (FY2022→FY2025)"); fmt(gap_wm[3])
-
-# %%
-print("Under-staffed wealth managers: 1-year (FY2024→FY2025)"); fmt(gap_wm[1])
-
-# %%
-print("Under-staffed wealth managers: 5-year (FY2020→FY2025)"); fmt(gap_wm[5])
-
-# %%
-
-fig, ax = plt.subplots(figsize=(8, 6))
-for s, c in zip(LABELS[1:], ["#9C94E6", "#473BCE", "#1E1660"]):
-    d = w3[w3.segment == s]; ax.scatter(d.advisor_cagr * 100, d.aum_cagr * 100, s=14, alpha=.6, label=s, color=c)
-lim = [-30, 80]; ax.plot(lim, lim, "k--", lw=1); ax.set_xlim(lim); ax.set_ylim(lim)
-ax.set_xlabel("Advisor headcount CAGR, 3y (%)"); ax.set_ylabel("AUM CAGR, 3y (%)")
-ax.set_title("Wealth managers ≥$1B: firms above the line grew AUM faster than advisors"); ax.legend()
+#@title
+fig, ax = plt.subplots(figsize=(10, 4))
+data = [cap[(cap.segment == s) & cap.wealth_manager].aum_per_advisor.dropna() / 1e6 for s in LABELS]
+ax.boxplot(data, labels=[l.replace("$", r"\$") for l in LABELS], showfliers=False, whis=(10, 90)); ax.set_yscale("log")
+ticks = [10, 30, 100, 300, 1000, 3000]; ax.set_ylim(8, 4000); ax.set_yticks(ticks)
+ax.set_yticklabels([f"\\${t:,}M" for t in ticks]); ax.minorticks_off()
+ax.set_ylabel("AUM per advisor (log scale)")
+ax.set_title("AUM per advisor rises with firm size; box = middle half of firms, whiskers = 10th-90th percentile", fontweight="bold")
 plt.tight_layout(); plt.show()
-print(f"$1B+ advisor-led wealth managers: {len(w3):,} | grew AUM faster than advisors: {(w3.staffing_gap > 0).mean():.0%}"
-      f" | median AUM CAGR {w3.aum_cagr.median():.1%} vs advisor CAGR {w3.advisor_cagr.median():.1%}")
+med = cap_medians.copy(); med.index = med.index.astype(str); med.index.name = "Segment"
+styled(med.rename(columns={"median AUM/advisor $M": "Median AUM per advisor ($M)", "clients_per_advisor": "Median clients per advisor"}),
+       "Typical load per advisor: wealth managers with 3+ advisors (FY2025)", "{:,.0f}")
 
 # %% [markdown]
-# **Commentary.**
-# * **Under-staffing is the norm, not the exception:** 92% of \$1B+ wealth managers sit above the diagonal; median AUM growth of 18.1% a year vs 4.6% for advisors. The industry's well-known advisor shortage shows up directly in the ADV data.
+# # 5. Q3 Under-staffing: 92% of \$1B+ wealth managers grew AUM faster than advisors
+# **Question:** Which RIAs appear under-staffed?
+#
+# *Staffing gap = annual AUM growth minus annual growth in advisor headcount. A positive gap means each advisor carries more AUM every year. Firms need at least 3 advisors at the start; acquisitions are excluded.*
+
+# %% [markdown]
+# **Key takeaways**
+# * **Under-staffing is the norm, not the exception:** 92% of \$1B+ wealth managers sit above the dashed line in the chart; median AUM growth of 18.1% a year vs 4.6% for advisors. The industry's well-known advisor shortage shows up directly in the ADV data.
 # * **The clearest cases** grew AUM 50-70% a year with flat or falling advisor headcount (Wiss, Facet, Arkadios, Kingswood). They have the budget, and the strongest need for more leverage per advisor.
 
-# %% [markdown]
-# # 6. Additional data of value
-# ## 6.1 Which custodians do the largest firms use?
-# Source: Schedule D 5.K(3), each firm's latest filing to Dec 2024 (see Step 1b). Firms list every custodian holding **≥10% of their separately managed account AUM**, so a firm can show several. Shares are **% of firms in the group that use each custodian**.
+# %%
+#@title
+show(gap_wm[3], "Most under-staffed wealth managers: 3 years (FY2022→FY2025), top 5 per segment", cols=["segment", "firm_name", "channel", "aum_end", "aum_cagr", "advisor_cagr", "staffing_gap", "adv_start", "adv_end"], n=5, sort="staffing_gap")
 
 # %%
-for name, (tbl, coverage, n) in cust_tables.items():
-    print(f"\n{name}: {n:,} firms, {coverage:.0%} report a custodian")
-    display(tbl.head(8).assign(share_of_firms=lambda x: (x.share_of_firms * 100).round(0), aum_held_bn=lambda x: x.aum_held_bn.round(0))
-            .rename(columns={"share_of_firms": "% of firms", "aum_held_bn": "SMA AUM held $B"}))
+#@title
+collapsible("Show the 1-year and 5-year views",
+    show(gap_wm[1], "1 year (FY2024→FY2025), top 5 per segment", cols=["segment", "firm_name", "channel", "aum_end", "aum_cagr", "advisor_cagr", "staffing_gap", "adv_start", "adv_end"], n=5, sort="staffing_gap"),
+    show(gap_wm[5], "5 years (FY2020→FY2025), top 5 per segment", cols=["segment", "firm_name", "channel", "aum_end", "aum_cagr", "advisor_cagr", "staffing_gap", "adv_start", "adv_end"], n=5, sort="staffing_gap"))
 
 # %%
-fig, ax = plt.subplots(figsize=(10, 4.5))
-views = ["All RIAs >$50B", "Wealth managers >$50B", "Wealth managers $10B-$50B", "Wealth managers $1B-$10B"]
-top = ["Charles Schwab", "Fidelity", "Pershing (BNY)", "BNY", "State Street", "Northern Trust", "J.P. Morgan", "LPL Financial", "Raymond James"]
-mat = pd.DataFrame({v: cust_tables[v][0].reindex(top).share_of_firms.fillna(0) * 100 for v in views})
-mat.plot.barh(ax=ax, color=["#C9C9D6", "#1E1660", "#473BCE", "#9C94E6"]); ax.invert_yaxis()
-ax.set_xlabel("% of firms using custodian"); ax.set_title("Custodian usage: asset managers vs wealth managers"); plt.tight_layout(); plt.show()
+#@title
+fig, ax = plt.subplots(figsize=(8, 6))
+for s, c in zip(LABELS[1:], ["#9C94E6", "#473BCE", "#1E1660"]):
+    d = w3[w3.segment == s]; ax.scatter(d.advisor_cagr * 100, d.aum_cagr * 100, s=14, alpha=.6, label=s.replace("$", r"\$"), color=c)
+lim = [-30, 80]; ax.plot(lim, lim, "k--", lw=1); ax.set_xlim(lim); ax.set_ylim(lim)
+ax.text(45, 70, "AUM growing faster\nthan advisors", ha="center", fontsize=9); ax.text(55, 20, "Advisors growing\nfaster than AUM", ha="center", fontsize=9)
+ax.set_xlabel("Advisor headcount growth per year, 3 years (%)"); ax.set_ylabel("AUM growth per year, 3 years (%)")
+ax.set_title(f"{(w3.staffing_gap > 0).mean():.0%} of \\$1B+ wealth managers sit above the line: AUM is outgrowing advisors", fontweight="bold")
+ax.legend(title="Segment"); plt.tight_layout(); plt.show()
+print(f"{len(w3):,} wealth managers above $1B · median AUM growth {w3.aum_cagr.median():.1%} a year vs advisor growth {w3.advisor_cagr.median():.1%}")
 
 # %% [markdown]
-# **Commentary.**
+# # 6. Bringing it together: a prioritised Nevis target list
+# The three signals combined into one score for **US advisor-led wealth managers with 5+ advisors**, ranked within each segment by percentile (equal weights):
+# 1. **3-year annual AUM growth**: momentum and budget.
+# 2. **AUM per advisor (Sep 2026)**: current capacity strain.
+# 3. **3-year staffing gap**: strain that is getting worse.
+
+# %%
+#@title
+targets = targets.join(t["crd"]).join(ref["ownership"][["new_controlling_entity_since_2020", "likely_pe_sponsor_owner"]], on="crd").drop(columns="crd")
+show(targets, "Prioritised Nevis targets: top 10 per segment by combined score (0-100)",
+     cols=["segment", "firm_name", "channel", "website", "aum_end", "aum_cagr", "aum_per_advisor", "staffing_gap", "adv_end",
+           "new_controlling_entity_since_2020", "likely_pe_sponsor_owner", "nevis_score"], sort="nevis_score")
+
+# %% [markdown]
+# **How to use this list.** The score is a prioritisation aid, not a verdict:
+# * **\$50B+ (Enterprise):** Cresset, Pathstone, Focus Partners, MAI, Savant, Carson, IEQ and Fisher combine scale, strong growth and rising AUM per advisor. Osaic and Cetera are a different motion: very large networks with low AUM per advisor, where the opportunity is giving thousands of independent advisors consistent tooling.
+# * **\$10B-\$50B:** Aptus, RWA, Clearstead, Merit, Apella, Apollon, NewEdge and Steward are fast-growing aggregators or multi-office firms, an ideal mid-market Enterprise wedge.
+# * **Next step to sharpen it:** add tech-stack signals and recent M&A announcements, then validate the top 20 with account research before outreach.
+
+# %% [markdown]
+# # 7. Additional supporting data
+
+# %% [markdown]
+# ## 7.1 Custodians: Schwab and Fidelity reach most of Nevis's market
+# *Source: Schedule D 5.K(3), each firm's latest filing to December 2024. Firms list every custodian holding 10%+ of their separately managed account AUM, so a firm can list several and columns add up to more than 100%.*
+
+# %% [markdown]
+# **Key takeaways**
 # * **Two different worlds:** asset managers (all RIAs >\$50B) custody with BNY, State Street and Northern Trust. Wealth managers custody overwhelmingly with **Schwab and Fidelity**, plus Pershing.
 # * **Schwab and Fidelity each serve over half of \$10B+ wealth managers**, and Schwab ~65% of \$1B-\$10B firms. A partnership or integration with these custodians' advisor platforms would reach most of Nevis's market.
 # * **Caveat:** custodians are reported only if they hold ≥10% of a firm's separately managed account AUM, and come from filings up to Dec 2024.
 
+# %%
+#@title
+views = list(cust_tables)
+mat = pd.DataFrame({f"{v} ({n:,} firms)": tbl.share_of_firms for v, (tbl, cov, n) in cust_tables.items()})
+keep = set().union(*[set(tbl.head(6).index) for tbl, _, _ in cust_tables.values()])
+mat = mat.loc[sorted(keep, key=lambda k: -mat.loc[k].fillna(0).iloc[1:].mean())]
+mat.index.name = "Custodian"
+display(styled(mat, "Share of firms using each custodian", "{:.0%}"))
+print("Firms reporting a custodian: " + " · ".join(f"{v} {cov:.0%}" for v, (tbl, cov, n) in cust_tables.items()))
+
+# %%
+#@title
+fig, ax = plt.subplots(figsize=(10, 4.5))
+views = ["All RIAs >$50B", "Wealth managers >$50B", "Wealth managers $10B-$50B", "Wealth managers $1B-$10B"]
+top = ["Charles Schwab", "Fidelity", "Pershing (BNY)", "BNY", "State Street", "Northern Trust", "J.P. Morgan", "LPL Financial", "Raymond James"]
+mat = pd.DataFrame({v: cust_tables[v][0].reindex(top).share_of_firms.fillna(0) * 100 for v in views})
+mat.rename(columns=lambda c: c.replace("$", r"\$")).plot.barh(ax=ax, color=["#C9C9D6", "#1E1660", "#473BCE", "#9C94E6"]); ax.invert_yaxis()
+ax.set_xlabel("% of firms using custodian"); ax.set_title("Wealth managers use Schwab and Fidelity; asset managers use BNY, State Street and Northern Trust", fontweight="bold"); plt.tight_layout(); plt.show()
+
 # %% [markdown]
-# ## 6.2 Ownership change: roll-ups likely to want to coordinate technology
+# ## 7.2 Ownership change: nearly half of \$10B+ wealth managers have a new owner since 2020
 # A firm that has changed hands, or is acquiring others, has a clear reason to standardise its technology: new owners and acquired teams bring different workflows, CRMs and processes. Signals for **wealth managers with \$1B+ AUM**, from each firm's latest filing to Dec 2024:
 #
 # | Signal | Source | What it indicates |
@@ -889,41 +901,135 @@ ax.set_xlabel("% of firms using custodian"); ax.set_title("Custodian usage: asse
 # | **Succession since 2020** | Schedule D Section 4 | The firm took over another registered adviser's business |
 # | **Ownership layers** | Count of Schedule B indirect owners | Complex holding structures typical of sponsor-backed platforms |
 
-# %%
-print("Share of $1B+ wealth managers showing each ownership-change signal, by segment")
-display((own_summary.drop(columns="wealth_managers") * 100).round(0).astype(int).assign(wealth_managers=own_summary.wealth_managers))
-print("\nLargest wealth managers with a new controlling entity since 2020")
-show = own[own.new_controlling_entity_since_2020.fillna(False).astype(bool)].sort_values("aum", ascending=False).groupby("segment", observed=True, group_keys=False).head(10)
-show.assign(aum=(show.aum / 1e9).round(1)).rename(columns={"aum": "AUM $B"})[
-    ["segment", "firm_name", "channel", "state", "AUM $B", "advisors", "likely_pe_sponsor_owner", "control_acquired_date", "successions_since_2020", "sponsor_names", "new_controlling_entities"]]
-
 # %% [markdown]
-# **Commentary.**
-# * **Ownership change is concentrated at the top:** about half of \$10B+ wealth managers have a new controlling entity since 2020, vs about a quarter of \$1B-\$10B firms.
+# **Key takeaways**
+# * **Ownership change is concentrated at the top:** nearly half of \$10B+ wealth managers have a new controlling entity since 2020, vs about a quarter of \$1B-\$10B firms.
 # * **PE-backed platforms** (Focus Partners and SCS/CD&R, Hightower/THL, Mariner/Leonard Green, Cerity/Genstar) are executing buy-and-build strategies. Each acquisition adds advisors with different tools and workflows, which is a strong trigger for standardised meeting prep, notes and CRM hygiene.
 # * **Caveat:** the PE flag is a name-based heuristic. New owners named "Holdings" or "Holdco" (e.g. Creative Planning's new owners) count as ownership change but not as PE.
-
-# %% [markdown]
-# ## 6.3 Bringing it together: a prioritised Nevis target list
-# The three signals combined into one score for **US advisor-led wealth managers with 5+ advisors**, ranked within each segment by percentile (equal weights):
-# 1. **3-year AUM CAGR**: momentum and budget.
-# 2. **AUM per advisor (Sep 2026)**: current capacity strain.
-# 3. **3-year staffing gap**: strain that is getting worse.
+# * **Internal restructures removed:** Morgan Stanley and Edward Jones file a "new controlling entity" that is their own holding company, not a new owner. Both were checked against external sources and excluded.
+#
 
 # %%
-targets = targets.join(t["crd"]).join(ref["ownership"][["new_controlling_entity_since_2020", "likely_pe_sponsor_owner"]], on="crd").drop(columns="crd")
-fmt(targets).rename(columns={"adv_end": "advisors"})
-
-# %% [markdown]
-# **How to use this list.** The score is a prioritisation aid, not a verdict:
-# * **\$50B+ (Enterprise):** Cresset, Pathstone, Focus Partners, MAI, Savant, Carson, IEQ and Fisher combine scale, strong growth and rising AUM per advisor. Osaic and Cetera are a different motion: very large networks with low AUM per advisor, where the opportunity is giving thousands of independent advisors consistent tooling.
-# * **\$10B-\$50B:** Aptus, RWA, Clearstead, Merit, Apella, Apollon, NewEdge and Steward are fast-growing aggregators or multi-office firms, an ideal mid-market Enterprise wedge.
-# * **Next step to sharpen it:** add custodian (Schedule D 5.K(3)), tech-stack signals and recent M&A announcements, then validate the top 20 with account research before outreach.
-
-# %% [markdown]
-# # 7. Export
+#@title
+osum = own_summary.copy(); osum.index = osum.index.astype(str); osum.index.name = "Segment"
+osum = osum[["wealth_managers", "new_controlling_entity", "likely_pe_sponsor", "any_succession", "ownership_change"]].rename(columns={
+    "wealth_managers": "Wealth managers ($1B+)", "new_controlling_entity": "New controlling owner since 2020",
+    "likely_pe_sponsor": "Likely PE-backed", "any_succession": "Took over another adviser", "ownership_change": "Any ownership change"})
+display(styled(osum, "Share of $1B+ wealth managers showing each ownership-change signal",
+               {c: ("{:,.0f}" if c.startswith("Wealth") else "{:.0%}") for c in osum.columns}))
+newown = own[own.new_controlling_entity_since_2020.fillna(False).astype(bool)].copy()
+show(newown, "Largest wealth managers with a new controlling owner since 2020, top 5 per segment",
+     cols=["segment", "firm_name", "channel", "aum", "advisors", "likely_pe_sponsor_owner", "control_acquired_date", "new_controlling_entities"],
+     n=5, sort="aum")
 
 # %%
+#@title
+o = own_summary[["new_controlling_entity", "likely_pe_sponsor"]] * 100
+o.index = [str(i).replace("$", r"\$") for i in o.index]
+fig, ax = plt.subplots(figsize=(9, 4))
+o.rename(columns={"new_controlling_entity": "New controlling owner since 2020", "likely_pe_sponsor": "Likely PE-backed"}).plot.bar(ax=ax, color=["#473BCE", "#9C94E6"])
+for cont in ax.containers: ax.bar_label(cont, fmt="%.0f%%", fontsize=9)
+big = own[own.aum >= 10e9].new_controlling_entity_since_2020.fillna(False).astype(bool).mean()
+ax.set_ylabel("% of wealth managers"); ax.set_xlabel(""); ax.tick_params(axis="x", rotation=0)
+ax.set_title(f"{big:.0%} of \\$10B+ wealth managers have a new controlling owner since 2020", fontweight="bold")
+plt.tight_layout(); plt.show()
+
+# %% [markdown]
+# # 8. Process
+
+# %% [markdown]
+# ## 8.1 How the data was built
+# **Pipeline:** download SEC files → standardise fields → fix websites → build one row per firm per year → classify and measure → validate (8.2) → present (Sections 2–7). All of it runs in the collapsed cells in Section 1.4.
+#
+# | Step | What we did | Why |
+# |---|---|---|
+# | **1. Source** | Seven SEC monthly roster files: **September 2021–2026** for metrics, **November 2026** for firm names, addresses and websites | Firms only have to refresh AUM, clients and headcount once a year (the annual amendment, Form ADV General Instruction 4), so one September file per year captures every firm's latest annual figures. **CHECK V12:** 97.4% of firms are unchanged Sep→Nov 2026. Name, address and website must be updated promptly, so the latest file holds them. |
+# | **1b. Bulk archive** | SEC bulk Form ADV archive (filings to Dec 2024): custodians (Schedule D 5.K(3)), owners (Schedules A/B), successions (Schedule D 4), every listed website (Schedule D 1.I) | Not in the monthly roster. Each firm's latest filing to Dec 2024 is used, a year older than the FY2025 metrics. |
+# | **2. Standardise** | Map each file (262 columns to 2022, 448 from 2023) to the brief's fields: SEC# (1.D), CRD# (1.E), name/city/state (1.B, 1.F), website (1.I), AUM (5.F(2)(c)), clients (5.D), employees (5.A), advisors (5.B(1)) | Core fields are stable across the layout change (**CHECK V1**) |
+# | **3. Fix websites** | Prefer the most recent non-social site that matches the firm's name, from all filings | The roster holds one address per firm, often a social profile (Beacon Pointe shows Pinterest) |
+# | **4. Firm table** | One row per firm per year, linked by **CRD#** | CRD# stays constant through renames (**CHECK V11**) |
+# | **5. Classify** | **Wealth manager** = 50%+ of AUM from individuals/HNW, offers financial planning, has IARs, at most 500 clients per advisor (or a broker-dealer with 100+ IARs, e.g. Merrill). Tagged **Independent RIA** vs **Dual-registered (broker-dealer)** | Removes asset managers, fund advisers and robo/TAMP platforms; keeps wirehouses (**CHECK V19**) |
+# | **6. Measure** | Growth = CAGR between Septembers; capacity = AUM and clients per advisor; staffing gap = AUM CAGR − advisor CAGR | Computed once in the analysis engine, then independently recomputed (**CHECK V16**) |
+#
+# **Labelling:** a September file holds AUM as of each firm's last fiscal year end, so the **Sep 2026 file = FY2025** and results are labelled FY2020–FY2025.
+#
+# **Rules that keep the rankings honest**
+# * **Minimum starting AUM by segment** (\$100M / \$200M / \$2B / \$10B), so a small firm re-registering can't "win" a larger segment.
+# * **Inorganic / step-change flag:** AUM up more than 2.5x or advisors more than doubled in a year, or a reported succession. These are acquisitions or roll-ups and are ranked separately.
+# * **Headcount reclassification flag:** advisors down more than 60% in a year (e.g. Vanguard 301 → 19) is a change in how the form was answered, not attrition. Excluded.
+# * **Segment = FY2025 AUM**, so firms are compared with today's peers.
+#
+# **Limitations:** SEC-registered advisers only (state-registered firms, generally under \$100M, are excluded); growth is nominal and includes market returns; custodian and ownership data run to Dec 2024; advisors (5.B(1)) include research staff; the wealth-manager definition is a rules-based proxy.
+#
+
+# %%
+#@title
+print("SEC source files used (firms and columns per snapshot)")
+display(sources_tbl)
+print("Sample of the analysis-ready firm table: largest wealth managers, FY2025 (full table in outputs/ria_firm_year_table.csv)")
+display(latest[latest.wealth_manager].nlargest(5, "aum")[["crd", "sec_number", "firm_name", "city", "state", "website", "aum", "clients", "employees", "advisors", "channel"]])
+
+# %% [markdown]
+# ## 8.2 Data checks: integrity of the data and accuracy of the calculations
+# Every check below runs automatically in Section 1.4, before any result is shown, and is labelled `CHECK Vn` in the code. The full results table is at the end of this section. **Critical** checks stop the notebook if they fail (bad data never reaches the analysis); **warnings** are reported and explained.
+#
+# | ID | What it proves |
+# |---|---|
+# | V0 | Source files (7 snapshots + 2 bulk archives) are byte-identical to the ones analysed (size + SHA-256 fingerprint) |
+# | V1 | Every snapshot contains every Form ADV field the analysis uses, despite the 262 → 448 column change in 2023 |
+# | V2 | Firm counts are in a plausible range and grow steadily (no truncated or partial files) |
+# | V3 | Exactly one row per firm (CRD#) per snapshot, so no double counting |
+# | V4 | Identifiers are well-formed (SEC# = 801-XXXXX, CRD# numeric) |
+# | V5 | Numeric fields parse cleanly (commas, blanks, text), with no silent data loss |
+# | V6 | AUM identity holds: discretionary + non-discretionary = total (Item 5.F(2)) |
+# | V7 | AUM by client type (Item 5.D) sums to total AUM, as Form ADV requires |
+# | V8 | No negative AUM, client or headcount values |
+# | V9 | Advisor headcount ≤ total employees (Item 5.B(1) vs 5.A) |
+# | V10 | Total regulatory AUM reconciles with SEC-published industry totals (~\$125T-\$128T in 2023) |
+# | V11 | Firms link cleanly across years by CRD# (year-on-year match rate) |
+# | V12 | September vs November 2026 AUM is almost unchanged, validating the "AUM updates annually" design choice |
+# | V13 | Spot check vs the SEC's public IAPD profile: Beacon Pointe (the brief's example firm) |
+# | V14 | Segment counts add up to the full FY2025 universe (no firm dropped or double-counted) |
+# | V15 | No infinite or impossible values in any derived ratio or growth rate |
+# | V16 | Growth figures reproduce from raw: CAGR independently recomputed from source AUM for 600 random firms |
+# | V17 | Ranked lists respect their own rules (min starting AUM, inorganic and reclassified firms excluded) |
+# | V18 | Website coverage and confidence are reported (data-quality transparency) |
+# | V19 | Classification is right: known asset managers excluded; known wealth managers and wirehouses included |
+# | V20 | Bulk-archive extracts (custodians, ownership) link to ≥95% of \$1B+ wealth managers |
+# | V21 | Custodian names are standardised (Schwab, Fidelity, Pershing…) for ≥90% of custodian-held AUM |
+#
+# V0-V13 test the **data**; V14-V21 test the **calculations** and derived classifications.
+
+# %% [markdown]
+# **Headline reconciliation:** firm counts and total regulatory AUM by snapshot.
+
+# %%
+#@title
+qc = panel.groupby("year").agg(firms=("crd", "nunique"), total_raum_trn=("aum", lambda x: x.sum() / 1e12),
+                               median_aum_mn=("aum", lambda x: x.median() / 1e6), zero_aum=("aum", lambda x: (x == 0).sum()),
+                               zero_advisors=("advisors", lambda x: (x == 0).sum()), missing_advisors=("advisors", lambda x: x.isna().sum()))
+qc
+
+# %% [markdown]
+# Totals reconcile with published SEC figures (about \$125T to \$128T of regulatory AUM in 2023). The 2026 step-up is market-driven and concentrated in the largest asset managers (Vanguard, Fidelity, BlackRock, PIMCO). Zero-advisor and zero-AUM firms are kept in the counts but excluded from any ratio that divides by them.
+
+# %%
+#@title
+print(f"{(summary.result == 'PASS').sum()} PASS · {(summary.result == 'WARN').sum()} WARN · {(summary.result == 'FAIL').sum()} FAIL")
+summary
+
+# %% [markdown]
+# ## 8.3 Code quality and how AI was used
+# * **One notebook, top to bottom:** Run all rebuilds every number from the raw SEC files, with no manual steps.
+# * **Clear structure:** settings → data pipeline → analysis engine → data checks (all collapsed in 1.4) → results (2–7) → explanation (8). Settings, thresholds and segment bands are defined once and reused; small named functions (`fetch`, `standardise`, `window`, `top_by_segment`, `check`, `show`) each do one job.
+# * **Fails loudly:** 22 labelled checks (`CHECK Vn`); critical ones stop the notebook before any result is shown.
+# * **Reproducible and reviewable:** cached downloads, SHA-256 file fingerprints, a fixed random seed, `requirements.txt`, and `nevis_ria_analysis.py` (the same notebook as plain text, so changes diff cleanly on GitHub).
+#
+# **How AI was used.** Built with Claude (Anthropic) working agentically, with me directing and checking each step. Claude browsed the SEC site and found the right files, mapped all 448 columns to the brief's fields, wrote and ran the pipeline, and surfaced data traps (one website per firm, re-registration "growth", robo platforms passing a naive filter, advisor-count reclassifications), each turned into an explicit rule. The judgement calls are mine: snapshot timing (grounded in Form ADV General Instruction 4), the wealth-manager definition, thresholds and the commercial framing. Results were verified by the 22 checks, reconciliation to SEC totals, an IAPD spot check of Beacon Pointe, and web spot checks of target websites.
+#
+
+# %%
+#@title Save outputs: Excel workbook of every ranked list and the firm-year CSV (outputs/)
 with pd.ExcelWriter(OUT / "nevis_ria_targets.xlsx") as xw:
     fmt(targets).to_excel(xw, sheet_name="Nevis targets", index=False)
     seg.reset_index().to_excel(xw, sheet_name="Segments", index=False)
