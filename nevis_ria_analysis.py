@@ -854,14 +854,16 @@ show(big_targets, f"Prioritised Nevis targets: top 10 per segment by Nevis score
 # # 7. Additional supporting data
 
 # %% [markdown]
-# ## 7.1 Custodian focus: Schwab and Fidelity reach most of Nevis's market
+# ## 7.1 Which Custodians Should Nevis Focus On
+#
 # *Source: Schedule D 5.K(3), each firm's latest filing to December 2024. Firms list every custodian holding 10%+ of their separately managed account AUM, so a firm can list several and columns add up to more than 100%.*
 
 # %% [markdown]
 # **Key takeaways**
-# * **Two different worlds:** asset managers (all RIAs >\$50B) custody with BNY, State Street and Northern Trust. Target RIAs custody overwhelmingly with **Schwab and Fidelity**, plus Pershing.
-# * **Schwab and Fidelity each serve over half of \$10B+ target RIAs**, and Schwab ~64% of \$1B-\$10B firms. A partnership or integration with these custodians' advisor platforms would reach most of Nevis's market.
-# * **Caveat:** custodians are reported only if they hold ≥10% of a firm's separately managed account AUM, and come from filings up to Dec 2024.
+# * **Small Number of Custodians:** asset managers (all RIAs >\$50B) custody with BNY, State Street and Northern Trust. Target RIAs custody overwhelmingly with **Schwab and Fidelity**, plus Pershing.
+# * **Schwab and Fidelity each serve over half of \$10B+ target RIAs**, and Schwab ~64% of \$1B-\$10B firms. Schwab's investment in Nevis aligns with this.
+#
+# *Caveat: custodians are reported only if they hold ≥10% of a firm's separately managed account AUM, and come from filings up to Dec 2024.*
 
 # %%
 #@title
