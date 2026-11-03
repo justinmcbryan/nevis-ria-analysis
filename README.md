@@ -23,3 +23,6 @@ Raw SEC files (~75 MB) are not committed; the notebook downloads them from sec.g
 
 ## Approach in one paragraph
 Six September snapshots (2021–2026) give clean 12-month growth intervals after annual-amendment season. Firms are linked across years by CRD#. Growth is CAGR with segment-scaled minimum starting AUM; acquisitions, re-registrations and advisor-count reclassifications are flagged and ranked separately. Rankings are shown for all RIAs (the literal answer) and for **advisor-led wealth managers** (Nevis's ICP), then combined into a prioritised target list per segment.
+
+## Note on GitHub's language bar
+GitHub reports ~94% "Jupyter Notebook" because it weighs files by size: the `.ipynb` stores the saved outputs (charts as images, result tables). `nevis_ria_analysis.py` is the identical code as plain text for easy reading and diffing.
