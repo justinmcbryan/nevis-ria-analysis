@@ -7,9 +7,9 @@
 # - Additional Data pulled from the bulk archive filing (data not reflected in monthly summaries)
 
 # %% [markdown]
-# # 1. Overview
-# ## 1.1 The questions we are solving for, and why
-# Nevis sells AI that increases **advisor capacity** at RIAs. Each question in the brief maps to a buying signal:
+# # 1. Executive Summary:
+#
+# The quickest way for Nevis to gather as much market share as possible is by working with the largest and fastest growing RIAs in the US. This assessment is focused on identifying the best canditates for Nevis to focus efforts on.
 #
 # | # | Question | Why it matters to Nevis |
 # |---|---|---|
@@ -922,8 +922,35 @@ plt.tight_layout(); plt.show()
 #@title
 print("SEC source files used (firms and columns per snapshot)")
 display(sources_tbl)
-print("Sample of the analysis-ready firm table: largest wealth managers, FY2025 (full table in outputs/ria_firm_year_table.csv)")
-display(latest[latest.wealth_manager].nlargest(5, "aum")[["crd", "sec_number", "firm_name", "city", "state", "website", "aum", "clients", "employees", "advisors", "channel"]])
+
+# Sample: three firms across every field the brief asks for, plus the fields this analysis adds
+SAMPLE = {"119290": "Beacon Pointe", "151736": "Pathstone", "167626": "Aptus Capital Advisors"}
+L = latest.set_index("crd").loc[list(SAMPLE)]
+W3 = win[3].set_index("crd").reindex(list(SAMPLE))
+O = ref["ownership"].reindex(list(SAMPLE))
+CU = (cust.sort_values("raum_at_custodian", ascending=False).groupby("crd").custodian.apply(lambda s: ", ".join(dict.fromkeys(s)))).reindex(list(SAMPLE))
+money = lambda v: f"${v / 1e9:,.2f}B" if v >= 1e9 else f"${v / 1e6:,.1f}M"
+rows = {
+    ("Brief", "SEC#"): L.sec_number, ("Brief", "Firm name"): L.firm_name, ("Brief", "Website"): L.website,
+    ("Brief", "City"): L.city, ("Brief", "State"): L.state, ("Brief", "AUM"): L.aum.map(money),
+    ("Brief", "Clients"): L.clients.map("{:,.0f}".format), ("Brief", "Avg AUM per client"): L.avg_aum_per_client.map(money),
+    ("Brief", "Employees"): L.employees.map("{:,.0f}".format), ("Brief", "Advisors"): L.advisors.map("{:,.0f}".format),
+    ("Brief", "Filing date"): L.filing_date.astype(str).str[:10],
+    ("Added", "CRD# (join key across years)"): pd.Series(L.index, index=L.index), ("Added", "Fiscal year of the metrics"): L.fiscal_year.map("FY{:.0f}".format),
+    ("Added", "Website source / confidence"): L.website_source.astype(str) + " / " + L.website_confidence.astype(str),
+    ("Added", "AUM segment"): L.segment.astype(str), ("Added", "Wealth manager (Nevis ICP)"): L.wealth_manager.map({True: "Yes", False: "No"}),
+    ("Added", "Channel"): L.channel, ("Added", "IARs"): L.iars.map("{:,.0f}".format),
+    ("Added", "AUM per advisor"): L.aum_per_advisor.map(money), ("Added", "Clients per advisor"): L.clients_per_advisor.map("{:,.0f}".format),
+    ("Added", "Individual/HNW share of AUM"): L.retail_aum_share.map("{:.0%}".format),
+    ("Added", "3-year AUM growth / yr"): W3.aum_cagr.map("{:.0%}".format), ("Added", "3-year staffing gap"): W3.staffing_gap.map(lambda x: f"{x * 100:+.0f} pts"),
+    ("Bulk archive", "Custodians (largest first)"): CU.fillna("–"),
+    ("Bulk archive", "New controlling owner since 2020"): O.new_controlling_entity_since_2020.map({True: "Yes", False: "No"}).fillna("–"),
+    ("Bulk archive", "Likely PE-backed"): O.likely_pe_sponsor_owner.map({True: "Yes", False: "No"}).fillna("–"),
+}
+sample = pd.DataFrame(rows).T
+sample.columns = list(SAMPLE.values()); sample.index.names = ["Source", "Field"]
+styled(sample, "Sample of the firm-level data: three firms, every field in the brief plus the fields added (full table in outputs/ria_firm_year_table.csv)")
+
 
 # %% [markdown]
 # ## 8.3 Data checks: integrity of the data and accuracy of the calculations
