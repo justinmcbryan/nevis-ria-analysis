@@ -700,9 +700,9 @@ fig.suptitle(f"Most target RIAs are under \\$1B, but the {int(big.firms.sum())} 
 plt.tight_layout(); plt.show()
 
 # %% [markdown]
-# # 3. **Q2a Who are the fastest-growing firm**
+# # 3. **Q2a - Who are the fastest-growing firm**
 #
-# *Annual AUM growth over 3 years (main view), with 1- and 5-year views below. Organic growth only: firms that grew by acquisition or re-registration are listed separately. Target RIAs only; versions covering all RIAs are in the Excel file.*
+# *Annual AUM growth over 3 years (main view), with 1- and 5-year views below. Organic growth only: firms that grew by acquisition or re-registration are listed separately.
 
 # %% [markdown]
 # **Key takeaways**
@@ -727,8 +727,7 @@ show(inorganic_wm, "Grew by acquisition or consolidation (inorganic), 3 years: t
      cols=["segment", "firm_name", "channel", "aum_start", "aum_end", "aum_cagr", "adv_start", "adv_end"], sort="aum_cagr")
 
 # %% [markdown]
-# # 4. Q2b Capacity strain: a typical advisor runs about \$125M; the most stretched run 5–10 times that
-# **Question:** Which firms are capacity-strained?
+# # 4. **Q2b - Which firms are capacity-strained?**
 #
 # *FY2025 AUM and clients per advisor, firms with 3+ advisors. For target RIAs, clients per advisor matters as much as AUM, because advisor time scales with relationships, not dollars.*
 
