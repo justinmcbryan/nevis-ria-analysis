@@ -13,7 +13,7 @@
 #
 # | # | Question | Why it matters to Nevis |
 # |---|---|---|
-# | Q1 | How many RIAs fall into each AUM segment? | Sizes the market and tells us which go-to-market motion fits each tier (named-account Enterprise vs product-led) |
+# | Q1 | How many RIAs fall into each AUM segment? | Sizes the market and shows which go-to-market motion fits each tier (named-account Enterprise vs product-led) |
 # | Q2a | Who are the fastest-growing firms? | Growth means budget, urgency and new advisors to onboard |
 # | Q2b | Which firms are capacity-strained? | High AUM (and clients) per advisor means advisors are stretched today |
 # | Q3 | Which RIAs appear under-staffed? | AUM growing faster than headcount means the strain is getting **worse**, the clearest case for leverage per advisor |
@@ -832,7 +832,7 @@ ax.set_xlabel("% of firms using custodian"); ax.set_title("Wealth managers use S
 # | Signal | Source | What it indicates |
 # |---|---|---|
 # | **New controlling entity since 2020** | Schedules A/B: an entity (not an individual) with 25%+ ownership or control, acquired 2020 or later | Sale to a PE sponsor, strategic acquirer or new holding structure |
-# | **Likely PE-backed (our estimate)** | **Not a Form ADV field.** Our flag: the new controlling entity's name looks like an investment vehicle (L.P., Partners, Equity, Investors, Aggregator, Co-Invest, Fund) and does not share a name with the firm itself | Financial-sponsor ownership, typically with a buy-and-build (roll-up) strategy |
+# | **Likely PE-backed (estimated)** | **Not a Form ADV field.** Estimated flag: the new controlling entity's name looks like an investment vehicle (L.P., Partners, Equity, Investors, Aggregator, Co-Invest, Fund) and does not share a name with the firm itself | Financial-sponsor ownership, typically with a buy-and-build (roll-up) strategy |
 # | **Succession since 2020** | Schedule D Section 4 | The firm took over another registered adviser's business |
 # | **Ownership layers** | Count of Schedule B indirect owners | Complex holding structures typical of sponsor-backed platforms |
 
@@ -897,7 +897,7 @@ plt.tight_layout(); plt.show()
 # ## 8.2 How the data was built
 # **Pipeline:** download SEC files → standardise fields → fix websites → build one row per firm per year → classify and measure → validate (8.3) → present (Sections 2–7). All of it runs in the collapsed code cell just before Section 2 (it has to run before the results; click **Show code** to see it).
 #
-# | Step | What we did | Why |
+# | Step | What was done | Why |
 # |---|---|---|
 # | **1. Source** | Seven SEC monthly roster files: **September 2021–2026** for metrics, **November 2026** for firm names, addresses and websites | Firms only have to refresh AUM, clients and headcount once a year (the annual amendment, Form ADV General Instruction 4), so one September file per year captures every firm's latest annual figures. **CHECK V12:** 97.4% of firms are unchanged Sep→Nov 2026. Name, address and website must be updated promptly, so the latest file holds them. |
 # | **1b. Bulk archive** | SEC bulk Form ADV archive (filings to Dec 2024): custodians (Schedule D 5.K(3)), owners (Schedules A/B), successions (Schedule D 4), every listed website (Schedule D 1.I) | Not in the monthly roster. Each firm's latest filing to Dec 2024 is used, a year older than the FY2025 metrics. |
@@ -941,27 +941,27 @@ rows = {
     ("Monthly Form ADV file: fields in the brief", "Filing date"): L.filing_date.astype(str).str[:10],
     ("Monthly Form ADV file: extra fields", "CRD# (join key across years)"): pd.Series(L.index, index=L.index),
     ("Monthly Form ADV file: extra fields", "IARs (registered reps)"): L.iars.map("{:,.0f}".format),
-    ("Calculated by us", "Fiscal year of the metrics"): L.fiscal_year.map("FY{:.0f}".format),
-    ("Calculated by us", "Website source / confidence"): L.website_source.astype(str) + " / " + L.website_confidence.astype(str),
-    ("Calculated by us", "AUM segment"): L.segment.astype(str),
-    ("Calculated by us", "Firm type (our classification)"): L.wealth_manager.map({True: "RIA – wealth manager", False: "RIA – other (asset manager, fund adviser…)"}),
-    ("Calculated by us", "Channel (from broker-dealer flag)"): L.channel,
-    ("Calculated by us", "AUM per advisor"): L.aum_per_advisor.map(money),
-    ("Calculated by us", "Clients per advisor"): L.clients_per_advisor.map("{:,.0f}".format),
-    ("Calculated by us", "Individual/HNW share of AUM"): L.retail_aum_share.map("{:.0%}".format),
-    ("Calculated by us", "3-year AUM growth / yr"): W3.aum_cagr.map("{:.0%}".format),
-    ("Calculated by us", "3-year staffing gap"): W3.staffing_gap.map(lambda x: f"{x * 100:+.0f} pts"),
+    ("Calculated from the data above", "Fiscal year of the metrics"): L.fiscal_year.map("FY{:.0f}".format),
+    ("Calculated from the data above", "Website source / confidence"): L.website_source.astype(str) + " / " + L.website_confidence.astype(str),
+    ("Calculated from the data above", "AUM segment"): L.segment.astype(str),
+    ("Calculated from the data above", "Firm type (classification)"): L.wealth_manager.map({True: "RIA – wealth manager", False: "RIA – other (asset manager, fund adviser…)"}),
+    ("Calculated from the data above", "Channel (from broker-dealer flag)"): L.channel,
+    ("Calculated from the data above", "AUM per advisor"): L.aum_per_advisor.map(money),
+    ("Calculated from the data above", "Clients per advisor"): L.clients_per_advisor.map("{:,.0f}".format),
+    ("Calculated from the data above", "Individual/HNW share of AUM"): L.retail_aum_share.map("{:.0%}".format),
+    ("Calculated from the data above", "3-year AUM growth / yr"): W3.aum_cagr.map("{:.0%}".format),
+    ("Calculated from the data above", "3-year staffing gap"): W3.staffing_gap.map(lambda x: f"{x * 100:+.0f} pts"),
     ("Bulk Form ADV archive (to Dec 2024)", "Custodians (largest first)"): CU.fillna("–"),
-    ("Calculated by us", "New controlling owner since 2020 (from filed owner acquisition dates)"):
+    ("Calculated from the data above", "New controlling owner since 2020 (from filed owner acquisition dates)"):
         O.new_controlling_entity_since_2020.map({True: "Yes", False: "No"}).fillna("–"),
-    ("Our estimate", "Likely PE-backed (from owner names)"): O.likely_pe_sponsor_owner.map({True: "Yes", False: "No"}).fillna("–"),
+    ("Estimated", "Likely PE-backed (from owner names)"): O.likely_pe_sponsor_owner.map({True: "Yes", False: "No"}).fillna("–"),
 }
 sample = pd.DataFrame(rows).T
 sample.columns = list(SAMPLE.values()); sample.index.names = ["Source", "Field"]
-pulled = sample[~sample.index.get_level_values(0).isin(["Calculated by us", "Our estimate"])]
-derived = sample[sample.index.get_level_values(0).isin(["Calculated by us", "Our estimate"])]
+pulled = sample[~sample.index.get_level_values(0).isin(["Calculated from the data above", "Estimated"])]
+derived = sample[sample.index.get_level_values(0).isin(["Calculated from the data above", "Estimated"])]
 display(styled(pulled, "A. Data pulled from SEC filings: three sample firms (full table in outputs/ria_firm_year_table.csv)"))
-styled(derived, "B. Calculated by us from that data: same three firms")
+styled(derived, "B. Calculated from the data above: same three firms")
 
 
 # %% [markdown]
@@ -1020,7 +1020,7 @@ summary
 # * **Fails loudly:** 22 labelled checks (`CHECK Vn`); critical ones stop the notebook before any result is shown.
 # * **Reproducible and reviewable:** cached downloads, SHA-256 file fingerprints, a fixed random seed, `requirements.txt`, and `nevis_ria_analysis.py` (the same notebook as plain text, so changes diff cleanly on GitHub).
 #
-# **How AI was used.** Built with Claude (Anthropic) working agentically, with me directing and checking each step. Claude browsed the SEC site and found the right files, mapped all 448 columns to the brief's fields, wrote and ran the pipeline, and surfaced data traps (one website per firm, re-registration "growth", robo platforms passing a naive filter, advisor-count reclassifications), each turned into an explicit rule. The judgement calls are mine: snapshot timing (grounded in Form ADV General Instruction 4), the wealth-manager definition, thresholds and the commercial framing. Results were verified by the 22 checks, reconciliation to SEC totals, an IAPD spot check of Beacon Pointe, and web spot checks of target websites.
+# **How AI was used.** Built with Claude (Anthropic) working agentically, with the author directing and checking each step. Claude browsed the SEC site and found the right files, mapped all 448 columns to the brief's fields, wrote and ran the pipeline, and surfaced data traps (one website per firm, re-registration "growth", robo platforms passing a naive filter, advisor-count reclassifications), each turned into an explicit rule. The judgement calls were made by the author: snapshot timing (grounded in Form ADV General Instruction 4), the wealth-manager definition, thresholds and the commercial framing. Results were verified by the 22 checks, reconciliation to SEC totals, an IAPD spot check of Beacon Pointe, and web spot checks of target websites.
 #
 
 # %%
