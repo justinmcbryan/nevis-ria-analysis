@@ -900,54 +900,6 @@ ax.set_ylabel("% of target RIAs"); ax.set_xlabel(""); ax.tick_params(axis="x", r
 ax.set_title(f"{big:.0%} of \\$10B+ target RIAs have a new controlling owner since 2020", fontweight="bold")
 plt.tight_layout(); plt.show()
 
-# %% [markdown]
-# # Data checks: integrity of the data and accuracy of the calculations
-# Every check below runs automatically in the pipeline cell just before Section 2, before any result is shown, and is labelled `CHECK Vn` in the code. The full results table is at the end of this section. **Critical** checks stop the notebook if they fail (bad data never reaches the analysis).
-#
-# | ID | What it proves |
-# |---|---|
-# | V0 | Source files (7 snapshots + 2 bulk archives) are byte-identical to the ones analysed (size + SHA-256 fingerprint) |
-# | V1 | Every snapshot contains every Form ADV field the analysis uses, despite the 262 → 448 column change in 2023 |
-# | V2 | Firm counts are in a plausible range and grow steadily (no truncated or partial files) |
-# | V3 | Exactly one row per firm (CRD#) per snapshot, so no double counting |
-# | V4 | Identifiers are well-formed (SEC# = 801-XXXXX, CRD# numeric) |
-# | V5 | Numeric fields parse cleanly (commas, blanks, text), with no silent data loss |
-# | V6 | AUM identity holds: discretionary + non-discretionary = total (Item 5.F(2)) |
-# | V7 | AUM by client type (Item 5.D) sums to total AUM, as Form ADV requires |
-# | V8 | No negative AUM, client or headcount values |
-# | V9 | Advisor headcount ≤ total employees (Item 5.B(1) vs 5.A) |
-# | V10 | Total regulatory AUM reconciles with SEC-published industry totals (~\$125T-\$128T in 2023) |
-# | V11 | Firms link cleanly across years by CRD# (year-on-year match rate) |
-# | V12 | September vs November 2026 AUM is almost unchanged, validating the "AUM updates annually" design choice |
-# | V13 | Spot check vs the SEC's public IAPD profile: Beacon Pointe (the brief's example firm) |
-# | V14 | Segment counts add up to the full FY2025 universe (no firm dropped or double-counted) |
-# | V15 | No infinite or impossible values in any derived ratio or growth rate |
-# | V16 | Growth figures reproduce from raw: CAGR independently recomputed from source AUM for 600 random firms |
-# | V17 | Ranked lists respect their own rules (min starting AUM, inorganic and reclassified firms excluded) |
-# | V18 | Website coverage and confidence are reported (data-quality transparency) |
-# | V19 | Classification is right: known asset managers excluded; known target RIAs (incl. wirehouses) included |
-# | V20 | Bulk-archive extracts (custodians, ownership) link to ≥95% of \$1B+ target RIAs |
-# | V21 | Custodian names are standardised (Schwab, Fidelity, Pershing…) for ≥90% of custodian-held AUM |
-#
-
-# %% [markdown]
-# **Headline reconciliation:** firm counts and total regulatory AUM by snapshot.
-
-# %%
-#@title
-qc = panel.groupby("year").agg(firms=("crd", "nunique"), total_raum_trn=("aum", lambda x: x.sum() / 1e12),
-                               median_aum_mn=("aum", lambda x: x.median() / 1e6), zero_aum=("aum", lambda x: (x == 0).sum()),
-                               zero_advisors=("advisors", lambda x: (x == 0).sum()), missing_advisors=("advisors", lambda x: x.isna().sum()))
-qc
-
-# %% [markdown]
-# Totals reconcile with published SEC figures (about \$125T to \$128T of regulatory AUM in 2023). The 2026 step-up is market-driven and concentrated in the largest asset managers (Vanguard, Fidelity, BlackRock, PIMCO). Zero-advisor and zero-AUM firms are kept in the counts but excluded from any ratio that divides by them.
-
-# %%
-#@title
-print(f"{(summary.result == 'PASS').sum()} PASS · {(summary.result == 'WARN').sum()} WARN · {(summary.result == 'FAIL').sum()} FAIL")
-summary
-
 # %%
 #@title Save outputs: Excel workbook of every ranked list and the firm-year CSV (outputs/)
 with pd.ExcelWriter(OUT / "nevis_ria_targets.xlsx") as xw:

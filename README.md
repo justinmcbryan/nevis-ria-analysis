@@ -19,7 +19,7 @@ The notebook downloads the files from sec.gov on first run (set `SEC_USER_AGENT`
 5. **Q2c**: under-staffed firms
 6. **Extra: consolidated findings**: prioritised Nevis target list for firms above \$10B
 7. **Extra: additional supporting data**: custodians, potential PE consolidation
-8. **Data checks**: 22 automated checks on data integrity and calculation accuracy
+The 22 automated data checks run inside the pipeline cell (critical checks stop the notebook before any result is shown); what each check proves and its result are documented separately.
 
 All code is collapsed in Colab so the notebook reads as a report. A single collapsed cell just before Q1 runs the whole pipeline (data loading, analysis engine and all 22 data checks) before any result is shown; click **Show code** on any cell to see it.
 
