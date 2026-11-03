@@ -867,16 +867,6 @@ show(big_targets, f"Prioritised Nevis targets: top 10 per segment by Nevis score
 
 # %%
 #@title
-views = list(cust_tables)
-mat = pd.DataFrame({f"{v} ({n:,} firms)": tbl.share_of_firms for v, (tbl, cov, n) in cust_tables.items()})
-keep = set().union(*[set(tbl.head(6).index) for tbl, _, _ in cust_tables.values()])
-mat = mat.loc[sorted(keep, key=lambda k: -mat.loc[k].fillna(0).iloc[1:].mean())]
-mat.index.name = "Custodian"
-display(styled(mat, "Share of firms using each custodian", "{:.0%}"))
-print("Firms reporting a custodian: " + " · ".join(f"{v} {cov:.0%}" for v, (tbl, cov, n) in cust_tables.items()))
-
-# %%
-#@title
 fig, ax = plt.subplots(figsize=(10, 4.5))
 views = ["All RIAs >$50B", "Target RIAs >$50B", "Target RIAs $10B-$50B", "Target RIAs $1B-$10B"]
 top = ["Charles Schwab", "Fidelity", "Pershing (BNY)", "BNY", "State Street", "Northern Trust", "J.P. Morgan", "LPL Financial", "Raymond James"]
@@ -885,8 +875,9 @@ mat.rename(columns=lambda c: c.replace("$", r"\$")).plot.barh(ax=ax, color=["#C9
 ax.set_xlabel("% of firms using custodian"); ax.set_title("Target RIAs use Schwab and Fidelity; asset managers use BNY, State Street and Northern Trust", fontweight="bold"); plt.tight_layout(); plt.show()
 
 # %% [markdown]
-# ## 7.2 Potential PE consolidation: nearly half of \$10B+ target RIAs have a new owner since 2020
-# A firm that has changed hands, or is acquiring others, has a clear reason to standardise its technology: new owners and acquired teams bring different workflows, CRMs and processes. Signals for **target RIAs with \$1B+ AUM**, from each firm's latest filing to Dec 2024:
+# ## 7.2 Potential PE consolidation:
+#
+# nearly half of \$10B+ target RIAs have a new owner since 2020. While some of these come from entity name transfers, the vast majority are through consolidation in the market. Tech rationalization & efficiency gains are often the primary levers PE buyers use. Nevis represents an exceptionally good option for PE firms looks to check both these boxes.
 #
 # | Signal | Source | What it indicates |
 # |---|---|---|
@@ -898,23 +889,10 @@ ax.set_xlabel("% of firms using custodian"); ax.set_title("Target RIAs use Schwa
 # %% [markdown]
 # **Key takeaways**
 # * **Ownership change is concentrated at the top:** nearly half of \$10B+ target RIAs have a new controlling entity since 2020, vs about a quarter of \$1B-\$10B firms.
-# * **PE-backed platforms** (Focus Partners and SCS/CD&R, Hightower/THL, Mariner/Leonard Green, Cerity/Genstar) are executing buy-and-build strategies. Each acquisition adds advisors with different tools and workflows, which is a strong trigger for standardised meeting prep, notes and CRM hygiene.
-# * **Caveat:** the PE flag is a name-based heuristic. New owners named "Holdings" or "Holdco" (e.g. Creative Planning's new owners) count as ownership change but not as PE.
-# * **Internal restructures removed:** Morgan Stanley and Edward Jones file a "new controlling entity" that is their own holding company, not a new owner. Both were checked against external sources and excluded.
+# * **PE-backed platforms** (Focus Partners and SCS/CD&R, Hightower/THL, Mariner/Leonard Green, Cerity/Genstar) are executing buy-and-build strategies.
 #
-
-# %%
-#@title
-osum = own_summary.copy(); osum.index = osum.index.astype(str); osum.index.name = "Segment"
-osum = osum[["wealth_managers", "new_controlling_entity", "likely_pe_sponsor", "any_succession", "ownership_change"]].rename(columns={
-    "wealth_managers": "Target RIAs ($1B+)", "new_controlling_entity": "New controlling owner since 2020",
-    "likely_pe_sponsor": "Likely PE-backed (est.)", "any_succession": "Took over another adviser", "ownership_change": "Any ownership change"})
-display(styled(osum, "Share of $1B+ target RIAs showing each ownership-change signal",
-               {c: ("{:,.0f}" if c.startswith("Wealth") else "{:.0%}") for c in osum.columns}))
-newown = own[own.new_controlling_entity_since_2020.fillna(False).astype(bool)].copy()
-show(newown, "Largest target RIAs with a new controlling owner since 2020, top 5 per segment",
-     cols=["segment", "firm_name", "channel", "aum", "advisors", "likely_pe_sponsor_owner", "control_acquired_date", "new_controlling_entities"],
-     n=5, sort="aum")
+# *Caveat: the PE flag is a name-based heuristic. New owners named "Holdings" or "Holdco" (e.g. Creative Planning's new owners) count as ownership change but not as PE.*
+#
 
 # %%
 #@title
@@ -954,7 +932,6 @@ plt.tight_layout(); plt.show()
 
 # %% [markdown]
 # ## 8.2 How the data was built
-# **Pipeline:** download SEC files → standardise fields → fix websites → build one row per firm per year → classify and measure → validate (8.3) → present (Sections 2–7). All of it runs in the collapsed code cell just before Section 2 (it has to run before the results; click **Show code** to see it).
 #
 # | Step | What was done | Why |
 # |---|---|---|
@@ -981,46 +958,6 @@ plt.tight_layout(); plt.show()
 #@title
 print("SEC source files used (firms and columns per snapshot)")
 display(sources_tbl)
-
-# Sample: three firms across every field the brief asks for, plus the fields this analysis adds
-SAMPLE = {"119290": "Beacon Pointe", "151736": "Pathstone", "167626": "Aptus Capital Advisors"}
-L = latest.set_index("crd").loc[list(SAMPLE)]
-W3 = win[3].set_index("crd").reindex(list(SAMPLE))
-O = ref["ownership"].reindex(list(SAMPLE))
-CU = (cust.sort_values("raum_at_custodian", ascending=False).groupby("crd").custodian.apply(lambda s: ", ".join(dict.fromkeys(s)))).reindex(list(SAMPLE))
-money = lambda v: f"${v / 1e9:,.2f}B" if v >= 1e9 else f"${v / 1e6:,.1f}M"
-rows = {
-    ("Monthly Form ADV file: fields in the brief", "SEC#"): L.sec_number, ("Monthly Form ADV file: fields in the brief", "Firm name"): L.firm_name,
-    ("Monthly Form ADV file: fields in the brief", "Website"): L.website, ("Monthly Form ADV file: fields in the brief", "City"): L.city,
-    ("Monthly Form ADV file: fields in the brief", "State"): L.state, ("Monthly Form ADV file: fields in the brief", "AUM"): L.aum.map(money),
-    ("Monthly Form ADV file: fields in the brief", "Clients (sum of client types)"): L.clients.map("{:,.0f}".format),
-    ("Monthly Form ADV file: fields in the brief", "Avg AUM per client (AUM ÷ clients, as the brief asks)"): L.avg_aum_per_client.map(money),
-    ("Monthly Form ADV file: fields in the brief", "Employees"): L.employees.map("{:,.0f}".format),
-    ("Monthly Form ADV file: fields in the brief", "Advisors"): L.advisors.map("{:,.0f}".format),
-    ("Monthly Form ADV file: fields in the brief", "Filing date"): L.filing_date.astype(str).str[:10],
-    ("Monthly Form ADV file: extra fields", "CRD# (join key across years)"): pd.Series(L.index, index=L.index),
-    ("Monthly Form ADV file: extra fields", "IARs (registered reps)"): L.iars.map("{:,.0f}".format),
-    ("Calculated from the data above", "Fiscal year of the metrics"): L.fiscal_year.map("FY{:.0f}".format),
-    ("Calculated from the data above", "Website source / confidence"): L.website_source.astype(str) + " / " + L.website_confidence.astype(str),
-    ("Calculated from the data above", "AUM segment"): L.segment.astype(str),
-    ("Calculated from the data above", "Firm type (classification)"): L.wealth_manager.map({True: "Target RIA", False: "Other RIA (asset manager, fund adviser…)"}),
-    ("Calculated from the data above", "Channel (from broker-dealer flag)"): L.channel,
-    ("Calculated from the data above", "AUM per advisor"): L.aum_per_advisor.map(money),
-    ("Calculated from the data above", "Clients per advisor"): L.clients_per_advisor.map("{:,.0f}".format),
-    ("Calculated from the data above", "Individual/HNW share of AUM"): L.retail_aum_share.map("{:.0%}".format),
-    ("Calculated from the data above", "3-year AUM growth / yr"): W3.aum_cagr.map("{:.0%}".format),
-    ("Calculated from the data above", "3-year staffing gap"): W3.staffing_gap.map(lambda x: f"{x * 100:+.0f} pts"),
-    ("Bulk Form ADV archive (to Dec 2024)", "Custodians (largest first)"): CU.fillna("–"),
-    ("Calculated from the data above", "New controlling owner since 2020 (from filed owner acquisition dates)"):
-        O.new_controlling_entity_since_2020.map({True: "Yes", False: "No"}).fillna("–"),
-    ("Estimated", "Likely PE-backed (from owner names)"): O.likely_pe_sponsor_owner.map({True: "Yes", False: "No"}).fillna("–"),
-}
-sample = pd.DataFrame(rows).T
-sample.columns = list(SAMPLE.values()); sample.index.names = ["Source", "Field"]
-pulled = sample[~sample.index.get_level_values(0).isin(["Calculated from the data above", "Estimated"])]
-derived = sample[sample.index.get_level_values(0).isin(["Calculated from the data above", "Estimated"])]
-display(styled(pulled, "A. Data pulled from SEC filings: three sample firms (full table in outputs/ria_firm_year_table.csv)"))
-styled(derived, "B. Calculated from the data above: same three firms")
 
 
 # %% [markdown]
