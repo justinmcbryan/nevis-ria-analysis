@@ -1,24 +1,10 @@
 # %% [markdown]
-# # US RIA Market Analysis for Nevis: Growth, Capacity & Staffing Signals
-# **Source:** SEC monthly Form ADV Part 1A roster ("Information About Registered Investment Advisers"), September 2021 to September 2026, plus November 2026 for current firm details.
-# **Author:** Justin McBryan · November 2026
-#
-# ### Executive summary
-# *Data: **FY2025** is the latest full year, taken from the SEC's September 2026 file. Custodian and ownership data come from filings up to December 2024.*
-#
-# | Question | Answer |
-# |---|---|
-# | **Q1. How many RIAs in each segment?** | 17,149 SEC-registered RIAs (\$177T), but the largest are asset managers, not Nevis buyers. The Nevis market is **6,940 wealth managers** (\$21.4T): 5,628 under \$1B, 1,153 at \$1–10B, 115 at \$10–50B and 44 above \$50B. |
-# | **Q2a. Who is growing fastest?** | Waverly (\$5.8B → \$29.9B in 3 years), Pathstone (\$24.8B → \$110B), Arkadios, Apella and Merit, growing 60–70%+ a year against a market median of ~13%. |
-# | **Q2b. Who is capacity-strained?** | A typical \$1B+ wealth manager runs ~\$120–130M and 60–80 clients per advisor. Circle Wealth (\$1.3B per advisor) and First Manhattan (\$750M) are the most stretched. |
-# | **Q3. Who is under-staffed?** | **92% of \$1B+ wealth managers grew AUM faster than advisor headcount** over 3 years (median 18.1% vs 4.6% a year). Clearest cases: Wiss, Facet, Arkadios, Kingswood. |
-# | **Who Nevis should target** | \$50B+: Cresset, Pathstone, Focus Partners, MAI, Carson, Savant, IEQ, Osaic, Fisher, Wells Fargo Advisors. \$10–50B: Aptus, RWA Wealth Partners and others (Section 6). |
-# | **Custodians** | Schwab and Fidelity each serve over half of \$10B+ wealth managers (Pershing ~17%): a natural partnership channel (Section 7.1). |
-# | **Ownership change** | Nearly half of \$10B+ wealth managers have a new controlling owner since 2020, many PE-backed, and need to standardise technology across acquired teams (Section 7.2). |
-#
-# **Data robustness:** 22 automated checks run every time the notebook runs, and all pass (Section 8.3).
-# **Deliverables:** this notebook · `outputs/nevis_ria_targets.xlsx` (every ranked list, including all-RIA versions, plus the data-check log) · `outputs/ria_firm_year_table.csv` (the analysis-ready firm-year table, ~95k rows).
-#
+# # US RIA Market Analysis for Nevis - Justin McBryan
+# **Source(s):**
+# - SEC monthly Form ADV Part 1A
+# - September 2021 to September 2026
+# - November 2026 for current firm details
+# - Additional Data pulled from the bulk archive filing (data not reflected in monthly summaries)
 
 # %% [markdown]
 # # 1. Overview
