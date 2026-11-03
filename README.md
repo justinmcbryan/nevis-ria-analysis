@@ -12,7 +12,7 @@ SEC monthly "Information About Registered Investment Advisers" roster (Form ADV 
 The notebook downloads the files from sec.gov on first run (set `SEC_USER_AGENT` if SEC asks for identification) and caches them in `data/`.
 
 ## Structure
-1. **Overview**: executive summary and the questions we are solving for
+1. **Overview**: executive summary and the questions being answered
 2. **Question 1**: RIAs by AUM segment (FY2025)
 3. **Question 2a**: fastest-growing firms (1/3/5 years)
 4. **Question 2b**: capacity-strained firms
