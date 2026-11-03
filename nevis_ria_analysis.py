@@ -16,33 +16,13 @@
 # | **Custodians** | Schwab and Fidelity each serve over half of \$10B+ wealth managers (Pershing ~17%): a natural partnership channel (Section 7.1). |
 # | **Ownership change** | Nearly half of \$10B+ wealth managers have a new controlling owner since 2020, many PE-backed, and need to standardise technology across acquired teams (Section 7.2). |
 #
-# **Data robustness:** 22 automated checks run every time the notebook runs, and all pass (Section 8.2).
+# **Data robustness:** 22 automated checks run every time the notebook runs, and all pass (Section 8.3).
 # **Deliverables:** this notebook · `outputs/nevis_ria_targets.xlsx` (every ranked list, including all-RIA versions, plus the data-check log) · `outputs/ria_firm_year_table.csv` (the analysis-ready firm-year table, ~95k rows).
 #
 
 # %% [markdown]
 # # 1. Overview
-# ## 1.1 How this workbook is put together and how to run it
-# **Run it:** Runtime → **Run all** (about 4 minutes in Colab). The first run downloads seven SEC roster files (~75 MB) and the SEC bulk Form ADV archive (~1.1 GB, for custodians and ownership), then caches small extracts; reruns use the cache. Every table and chart is also saved in the notebook, so it can be read without running anything.
-#
-# **Layout:** the Colab contents panel (☰, left sidebar) works as the navigation. Code is collapsed so the page reads as a report; click **Show code** on any cell to see it.
-#
-# | Section | What it contains |
-# |---|---|
-# | **1. Overview** | How to run (1.1), the questions and why they matter (1.2), key terms and data dates (1.3), the pipeline that loads, calculates and validates everything (1.4, collapsed) |
-# | **2. Question 1** | RIAs by AUM market segment (FY2025) |
-# | **3. Question 2a** | Fastest-growing firms (1, 3, 5 years) |
-# | **4. Question 2b** | Capacity-strained firms (AUM per advisor) |
-# | **5. Question 3** | Under-staffed firms (AUM growth vs advisor growth) |
-# | **6. Bringing it together** | One prioritised Nevis target list combining Q2a, Q2b and Q3 |
-# | **7. Additional supporting data** | Custodians (7.1), ownership change / roll-ups (7.2) |
-# | **8. Process** | How the data was built (8.1), data checks and results (8.2), code quality and AI use (8.3) |
-#
-# **Design principle:** all loading, calculation and validation happen once, in Section 1.4, before any result is shown. Critical data checks stop the notebook there, so bad data never reaches Sections 2–7, which only present results. Section 8 explains the process and shows the check results.
-#
-
-# %% [markdown]
-# ## 1.2 The questions we are solving for, and why
+# ## 1.1 The questions we are solving for, and why
 # Nevis sells AI that increases **advisor capacity** at RIAs. Each question in the brief maps to a buying signal:
 #
 # | # | Question | Why it matters to Nevis |
@@ -54,33 +34,12 @@
 #
 # Every question is answered twice: for **all SEC-registered RIAs** (the literal answer) and for **advisor-led wealth managers**, Nevis's ideal customer profile. Unfiltered rankings are dominated by fund managers that aren't Nevis buyers.
 
-# %% [markdown]
-# ## 1.3 Key terms and data dates
-# | Term | Meaning in this notebook |
-# |---|---|
-# | **AUM** | Regulatory assets under management as filed on Form ADV (Item 5.F) |
-# | **Wealth manager** | An RIA with 50%+ of AUM from individuals and high-net-worth clients, that offers financial planning and serves clients through registered advisors. Asset managers, fund advisers and robo platforms are excluded; wirehouses are kept |
-# | **Independent RIA / Dual-registered (BD)** | Dual-registered firms are also broker-dealers (wirehouses such as Morgan Stanley, networks such as LPL or Edward Jones) |
-# | **Advisors** | Staff performing investment advisory functions (Form ADV Item 5.B(1)) |
-# | **Annual growth** | Compound annual growth rate (CAGR) between two September filings |
-# | **Staffing gap** | Annual AUM growth minus annual advisor-headcount growth, in percentage points (pts). Positive = each advisor carries more every year |
-# | **Organic / inorganic** | Inorganic = growth by acquisition or re-registration (AUM up 2.5x+ or advisors doubled in one year, or a reported succession). Ranked separately |
-# | **Segment** | FY2025 AUM band: under \$1B, \$1–10B, \$10–50B, over \$50B |
-#
-# | Data | As of | Used in |
-# |---|---|---|
-# | AUM, clients, headcount (latest) | **FY2025**, from the SEC's September 2026 file | Sections 2–6 |
-# | Growth history | FY2020–FY2025 (September 2021–2026 files) | Sections 3, 5, 6 |
-# | Firm name, location, website | November 2026 file (most current) | All tables |
-# | Custodians and ownership | Each firm's latest filing to December 2024 (SEC bulk archive) | Section 7 |
-#
-
-# %% [markdown]
-# ## 1.4 Run the pipeline
-# The collapsed cells below download the SEC files, build the firm table, calculate every metric and run all 22 data checks. They are explained in Section 8. Click **Show code** on any cell to see it.
-
 # %%
-#@title Settings
+#@title
+# RUNS THE WHOLE PIPELINE: download SEC files -> standardise -> firm table -> analysis engine -> 22 data checks.
+# Explained in Section 8. Critical checks stop the notebook here, before any result is shown.
+
+# ==================== SETTINGS ====================
 import os, re, zipfile, warnings
 from pathlib import Path
 import numpy as np, pandas as pd, requests
@@ -96,8 +55,8 @@ for p in (RAW, CACHE, OUT): p.mkdir(parents=True, exist_ok=True)
 # SEC fair-access policy: automated requests must identify a name and contact email
 SEC_USER_AGENT = os.environ.get("SEC_USER_AGENT", "Justin McBryan justin.mcbryan@useaffluence.com")
 
-# %%
-#@title Step 1: download and read the SEC roster files
+
+# ==================== STEP 1: DOWNLOAD AND READ THE SEC ROSTER FILES ====================
 BASE = "https://www.sec.gov/files/investment/data/"
 OLD, NEW = "information-about-registered-investment-advisers-and-exempt-reporting-advisers/", "information-about-registered-investment-advisers-exempt-reporting-advisers/"
 SNAPSHOTS = {
@@ -161,8 +120,7 @@ raw = {lab: read_snapshot(lab, url) for lab, url in SNAPSHOTS.items()}
 sources_tbl = pd.DataFrame({lab: {"firms": len(d), "columns": d.shape[1]} for lab, d in raw.items()}).T
 
 
-# %%
-#@title Step 1b: extract custodians, ownership and websites from the bulk archive
+# ==================== STEP 1B: EXTRACT CUSTODIANS, OWNERSHIP AND WEBSITES FROM THE BULK ARCHIVE ====================
 REF = DATA_DIR / "reference"; REF.mkdir(parents=True, exist_ok=True)
 REF_FILES = {k: REF / f"{k}.csv" for k in ("custodians", "ownership", "websites")}
 
@@ -240,8 +198,7 @@ ref["ownership"] = ref["ownership"].set_index("crd")
 ref_rows = {k: f"{len(v):,} rows" for k, v in ref.items()}
 
 
-# %%
-#@title Step 2: standardise fields
+# ==================== STEP 2: STANDARDISE FIELDS ====================
 CLIENT_TYPES = list("abcdefghijklmn")
 SOCIAL = re.compile(r"linkedin|facebook|twitter|(^|\.)x\.com$|instagram|youtube|tiktok|vimeo|spotify|yelp|pinterest|"
                     r"medium\.com|podcasts\.apple|podbean|threads\.net|bsky|substack|flickr|goo\.gl|bit\.ly|linktr\.ee|douyin|weibo|wechat|glassdoor|indeed\.com|jobs|careers|amazon\.com|wordpress\.com|soundcloud|iheart|apple\.com|blogspot", re.I)
@@ -285,8 +242,7 @@ std = {lab: standardise(r, lab) for lab, r in raw.items()}
 panel = pd.concat([std[l] for l in std if l.endswith("-09")], ignore_index=True)
 
 
-# %%
-#@title Step 3: fix websites
+# ==================== STEP 3: FIX WEBSITES ====================
 order = ["2026-11", "2026-09", "2025-09", "2024-09", "2023-09", "2022-09", "2021-09"]
 STOP = {"llc", "inc", "lp", "llp", "ltd", "the", "and", "group", "capital", "management", "advisors", "advisers", "advisory",
         "wealth", "financial", "partners", "investment", "investments", "asset", "services", "company", "corp", "corporation", "trust"}
@@ -330,8 +286,7 @@ for key, site in VERIFIED.items():
         web = pd.concat([web[web.crd != c], pd.DataFrame([[c, site, "analyst-verified (web search)", "verified"]], columns=web.columns)])
 
 
-# %%
-#@title Step 4: build the firm table
+# ==================== STEP 4: BUILD THE FIRM TABLE ====================
 ident_cols = ["crd", "sec_number", "firm_name", "city", "state", "country"]
 ident = pd.concat([std["2026-11"][ident_cols], std["2026-09"][ident_cols]]).drop_duplicates("crd")
 ident = ident.merge(web, on="crd", how="left")
@@ -358,8 +313,7 @@ firm_year.to_csv(OUT / "ria_firm_year_table.csv", index=False)
 latest = firm_year[firm_year.year == 2026].copy()
 
 
-# %%
-#@title Steps 5-6: analysis engine (all metrics)
+# ==================== STEPS 5-6: ANALYSIS ENGINE (ALL METRICS) ====================
 # ===================== ANALYSIS ENGINE =====================
 # Every metric used in Sections 2-6 is computed here, once. Presentation cells only display these objects.
 
@@ -483,8 +437,7 @@ own_summary = own.groupby("segment", observed=True).agg(
     any_succession=("successions_since_2020", lambda x: (x > 0).mean()))
 
 
-# %%
-#@title Data checks V0-V13 (data integrity)
+# ==================== DATA CHECKS V0-V13 (DATA INTEGRITY) ====================
 import hashlib
 checks = []
 def check(cid, name, passed, detail, critical=True):
@@ -581,9 +534,7 @@ check("V13", "Beacon Pointe matches IAPD (AUM ≈ $54.9B, 440 advisors, Newport 
       f"AUM ${bp.aum/1e9:,.2f}B, advisors {bp.advisors:.0f}, {bp.city}, {bp.state}")
 
 
-
-# %%
-#@title Data checks V14-V21 (calculations)
+# ==================== DATA CHECKS V14-V21 (CALCULATIONS) ====================
 # CHECK V14: segment counts reconcile to universe
 check("V14", "Segment counts sum to all FY2025 RIAs", int(seg.RIAs.sum()) == len(latest) == raw["2026-09"].shape[0],
       f"{int(seg.RIAs.sum()):,} = {len(latest):,} = {raw['2026-09'].shape[0]:,}")
@@ -636,11 +587,9 @@ share_mapped = (mapped.raum_at_custodian * mapped.canonical).sum() / mapped.raum
 check("V21", "≥90% of $1B+ wealth-manager custodian AUM mapped to a standard name", share_mapped >= 0.9, f"{share_mapped:.1%} of custodian-held AUM mapped", critical=False)
 
 summary = pd.DataFrame(checks).set_index("id")
-print(f"Data checks complete: {(summary.result == 'PASS').sum()} PASS · {(summary.result == 'WARN').sum()} WARN · {(summary.result == 'FAIL').sum()} FAIL (full results in Section 8.2)")
 
 
-# %%
-#@title Presentation helpers (table formatting)
+# ==================== PRESENTATION HELPERS (TABLE FORMATTING) ====================
 import re
 from IPython.display import HTML, display
 PLAIN = {"segment": "Segment", "firm_name": "Firm", "channel": "Channel", "state": "State", "city": "City", "website": "Website",
@@ -839,7 +788,7 @@ ax.legend(title="Segment"); plt.tight_layout(); plt.show()
 print(f"{len(w3):,} wealth managers above $1B · median AUM growth {w3.aum_cagr.median():.1%} a year vs advisor growth {w3.advisor_cagr.median():.1%}")
 
 # %% [markdown]
-# # 6. Bringing it together: a prioritised Nevis target list
+# # 6. Consolidated findings: a prioritised Nevis target list
 # The three signals combined into one score for **US advisor-led wealth managers with 5+ advisors**, ranked within each segment by percentile (equal weights):
 # 1. **3-year annual AUM growth**: momentum and budget.
 # 2. **AUM per advisor (Sep 2026)**: current capacity strain.
@@ -862,7 +811,7 @@ show(targets, "Prioritised Nevis targets: top 10 per segment by combined score (
 # # 7. Additional supporting data
 
 # %% [markdown]
-# ## 7.1 Custodians: Schwab and Fidelity reach most of Nevis's market
+# ## 7.1 Custodian focus: Schwab and Fidelity reach most of Nevis's market
 # *Source: Schedule D 5.K(3), each firm's latest filing to December 2024. Firms list every custodian holding 10%+ of their separately managed account AUM, so a firm can list several and columns add up to more than 100%.*
 
 # %% [markdown]
@@ -891,7 +840,7 @@ mat.rename(columns=lambda c: c.replace("$", r"\$")).plot.barh(ax=ax, color=["#C9
 ax.set_xlabel("% of firms using custodian"); ax.set_title("Wealth managers use Schwab and Fidelity; asset managers use BNY, State Street and Northern Trust", fontweight="bold"); plt.tight_layout(); plt.show()
 
 # %% [markdown]
-# ## 7.2 Ownership change: nearly half of \$10B+ wealth managers have a new owner since 2020
+# ## 7.2 Potential PE consolidation: nearly half of \$10B+ wealth managers have a new owner since 2020
 # A firm that has changed hands, or is acquiring others, has a clear reason to standardise its technology: new owners and acquired teams bring different workflows, CRMs and processes. Signals for **wealth managers with \$1B+ AUM**, from each firm's latest filing to Dec 2024:
 #
 # | Signal | Source | What it indicates |
@@ -938,8 +887,29 @@ plt.tight_layout(); plt.show()
 # # 8. Process
 
 # %% [markdown]
-# ## 8.1 How the data was built
-# **Pipeline:** download SEC files → standardise fields → fix websites → build one row per firm per year → classify and measure → validate (8.2) → present (Sections 2–7). All of it runs in the collapsed cells in Section 1.4.
+# ## 8.1 Key terms and data dates
+# | Term | Meaning in this notebook |
+# |---|---|
+# | **AUM** | Regulatory assets under management as filed on Form ADV (Item 5.F) |
+# | **Wealth manager** | An RIA with 50%+ of AUM from individuals and high-net-worth clients, that offers financial planning and serves clients through registered advisors. Asset managers, fund advisers and robo platforms are excluded; wirehouses are kept |
+# | **Independent RIA / Dual-registered (BD)** | Dual-registered firms are also broker-dealers (wirehouses such as Morgan Stanley, networks such as LPL or Edward Jones) |
+# | **Advisors** | Staff performing investment advisory functions (Form ADV Item 5.B(1)) |
+# | **Annual growth** | Compound annual growth rate (CAGR) between two September filings |
+# | **Staffing gap** | Annual AUM growth minus annual advisor-headcount growth, in percentage points (pts). Positive = each advisor carries more every year |
+# | **Organic / inorganic** | Inorganic = growth by acquisition or re-registration (AUM up 2.5x+ or advisors doubled in one year, or a reported succession). Ranked separately |
+# | **Segment** | FY2025 AUM band: under \$1B, \$1–10B, \$10–50B, over \$50B |
+#
+# | Data | As of | Used in |
+# |---|---|---|
+# | AUM, clients, headcount (latest) | **FY2025**, from the SEC's September 2026 file | Sections 2–6 |
+# | Growth history | FY2020–FY2025 (September 2021–2026 files) | Sections 3, 5, 6 |
+# | Firm name, location, website | November 2026 file (most current) | All tables |
+# | Custodians and ownership | Each firm's latest filing to December 2024 (SEC bulk archive) | Section 7 |
+#
+
+# %% [markdown]
+# ## 8.2 How the data was built
+# **Pipeline:** download SEC files → standardise fields → fix websites → build one row per firm per year → classify and measure → validate (8.3) → present (Sections 2–7). All of it runs in the collapsed code cell just before Section 2 (it has to run before the results; click **Show code** to see it).
 #
 # | Step | What we did | Why |
 # |---|---|---|
@@ -970,8 +940,8 @@ print("Sample of the analysis-ready firm table: largest wealth managers, FY2025 
 display(latest[latest.wealth_manager].nlargest(5, "aum")[["crd", "sec_number", "firm_name", "city", "state", "website", "aum", "clients", "employees", "advisors", "channel"]])
 
 # %% [markdown]
-# ## 8.2 Data checks: integrity of the data and accuracy of the calculations
-# Every check below runs automatically in Section 1.4, before any result is shown, and is labelled `CHECK Vn` in the code. The full results table is at the end of this section. **Critical** checks stop the notebook if they fail (bad data never reaches the analysis); **warnings** are reported and explained.
+# ## 8.3 Data checks: integrity of the data and accuracy of the calculations
+# Every check below runs automatically in the pipeline cell just before Section 2, before any result is shown, and is labelled `CHECK Vn` in the code. The full results table is at the end of this section. **Critical** checks stop the notebook if they fail (bad data never reaches the analysis); **warnings** are reported and explained.
 #
 # | ID | What it proves |
 # |---|---|
@@ -1019,9 +989,9 @@ print(f"{(summary.result == 'PASS').sum()} PASS · {(summary.result == 'WARN').s
 summary
 
 # %% [markdown]
-# ## 8.3 Code quality and how AI was used
-# * **One notebook, top to bottom:** Run all rebuilds every number from the raw SEC files, with no manual steps.
-# * **Clear structure:** settings → data pipeline → analysis engine → data checks (all collapsed in 1.4) → results (2–7) → explanation (8). Settings, thresholds and segment bands are defined once and reused; small named functions (`fetch`, `standardise`, `window`, `top_by_segment`, `check`, `show`) each do one job.
+# ## 8.4 Code quality and how AI was used
+# * **How to run:** Runtime → Run all (about 4 minutes in Colab). The first run downloads the SEC files and caches them; every table and chart is also saved in the notebook, so it can be read without running anything. Run all rebuilds every number from the raw SEC files, with no manual steps.
+# * **Clear structure:** settings → data pipeline → analysis engine → data checks (one collapsed cell just before Section 2, with a banner per step) → results (2–7) → explanation (8). Settings, thresholds and segment bands are defined once and reused; small named functions (`fetch`, `standardise`, `window`, `top_by_segment`, `check`, `show`) each do one job.
 # * **Fails loudly:** 22 labelled checks (`CHECK Vn`); critical ones stop the notebook before any result is shown.
 # * **Reproducible and reviewable:** cached downloads, SHA-256 file fingerprints, a fixed random seed, `requirements.txt`, and `nevis_ria_analysis.py` (the same notebook as plain text, so changes diff cleanly on GitHub).
 #
