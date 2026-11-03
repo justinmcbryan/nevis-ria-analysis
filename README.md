@@ -31,8 +31,8 @@ All code is collapsed in Colab so the notebook reads as a report. A single colla
 
 Raw SEC files (~75 MB of roster snapshots + ~1.1 GB bulk archive) are not committed; the notebook downloads them from sec.gov on first run (about 5 minutes in Colab) and caches them.
 
-## Approach in one paragraph
-Six September snapshots (2021–2026) give clean 12-month growth intervals after annual-amendment season. Firms are linked across years by CRD#. Growth is CAGR with segment-scaled minimum starting AUM; acquisitions, re-registrations and advisor-count reclassifications are flagged and ranked separately. The presentation focuses on **target RIAs** (the RIAs Nevis sells to: US-based, mainly serving individuals, offering financial planning): asset managers, fund advisers and robo platforms are excluded, while wirehouses and broker-dealers are kept and tagged.
+## Approach
+Data analysis of SEC Form ADV data for US RIA firms (2021–2026). The output is in the Google Colab notebook: [open in Colab](https://colab.research.google.com/github/justinmcbryan/nevis-ria-analysis/blob/main/nevis_ria_analysis.ipynb).
 
 ## Note on GitHub's language bar
 GitHub reports ~94% "Jupyter Notebook" because it weighs files by size: the `.ipynb` stores the saved outputs (charts as images, result tables). `nevis_ria_analysis.py` is the identical code as plain text for easy reading and diffing.
