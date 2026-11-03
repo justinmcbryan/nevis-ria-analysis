@@ -742,9 +742,8 @@ show(inorganic_wm, "Grew by acquisition or consolidation (inorganic), 3 years: t
 
 # %% [markdown]
 # **Key takeaways**
-# * **Typical load:** a \$1B+ target RIA runs about \$120M-\$130M of AUM and 60-80 clients per advisor (dashed lines in the chart; median table below). Firms far above this are the most stretched.
-# * **Two kinds of strain.** High AUM per advisor with few clients (Circle Wealth, Prowell, First Manhattan) usually means ultra-high-net-worth or family-office models: fewer, deeper relationships where the pain is preparation and reporting quality. High clients per advisor (150-300+) means volume pain: meetings, follow-ups and compliance notes. Each suggests a different Nevis pitch.
-# * All-RIA rankings (which are dominated by fund complexes such as Vanguard) are in the Excel file.
+# * **Typical load:** a \$1B+ target RIA runs about \$120M-\$130M of AUM and 60-80 clients per advisor (dashed lines in the chart; median table below).
+# * **Different Strain Depending On the Firm:** High AUM per advisor with few clients (Circle Wealth, Prowell, First Manhattan) usually means ultra-high-net-worth or family-office models: concentration risk with high value clients and effort predominantly on reporting, research and investment excellence demonstration. High clients per advisor (William Blair & Company) means volume pain: meetings, follow-ups and compliance notes.
 
 # %%
 #@title
@@ -792,63 +791,15 @@ styled(med.rename(columns={"median AUM/advisor $M": "Median AUM per advisor ($M)
 show(cap_wm[cap_wm.segment.astype(str) != "<$1B"], "Highest AUM per advisor: target RIAs above $1B with 3+ advisors (FY2025), top 5 per segment",
      cols=["segment", "firm_name", "channel", "state", "aum", "advisors", "aum_per_advisor", "clients_per_advisor"], n=5, sort="aum_per_advisor")
 
-# %%
-#@title
-import matplotlib.pyplot as plt
-import numpy as np
-
-# Get top 5 per segment sorted by aum_per_advisor
-top_cap_wm = cap_wm.groupby("segment", observed=True, group_keys=False).head(5).sort_values(["segment", "aum_per_advisor"], ascending=[False, True])
-
-fig, ax = plt.subplots(figsize=(10, 8))
-colors = {"<$1B": "#9C94E6", "$1B-$10B": "#473BCE", "$10B-$50B": "#1E1660", ">$50B": "#0B072B"}
-
-y_pos = np.arange(len(top_cap_wm))
-segment_colors = [colors[seg] for seg in top_cap_wm["segment"]]
-
-bars = ax.barh(y_pos, top_cap_wm["aum_per_advisor"] / 1e6, color=segment_colors, alpha=0.85)
-
-# Clean up names for nice display
-labels = [f"{nice_name(name)} ({seg})" for name, seg in zip(top_cap_wm["firm_name"], top_cap_wm["segment"])]
-ax.set_yticks(y_pos)
-ax.set_yticklabels(labels)
-
-# Add values on the bars
-for bar in bars:
-    width = bar.get_width()
-    ax.text(width + 10, bar.get_y() + bar.get_height()/2, f"${width:,.0f}M",
-            va='center', ha='left', fontsize=9, fontweight='semibold')
-
-ax.set_xlabel("AUM per Advisor ($M)")
-ax.set_title("Highest AUM per Advisor: Top 5 Target RIAs per Segment (FY2025)", fontweight="bold", fontsize=12)
-
-# Legend for segments
-handles = [plt.Rectangle((0,0),1,1, color=colors[seg]) for seg in LABELS[::-1]]
-ax.legend(handles, LABELS[::-1], title="AUM Segment")
-
-plt.tight_layout()
-plt.show()
-
 # %% [markdown]
-# # 5. Q3 Under-staffing: 92% of \$1B+ target RIAs grew AUM faster than advisors
-# **Question:** Which RIAs appear under-staffed?
+# # 5. **Which RIAs appear under-staffed?**
 #
 # *Staffing gap = annual AUM growth minus annual growth in advisor headcount. A positive gap means each advisor carries more AUM every year. Firms need at least 3 advisors at the start; acquisitions are excluded.*
 
 # %% [markdown]
 # **Key takeaways**
-# * **Under-staffing is the norm, not the exception:** 92% of \$1B+ target RIAs sit above the dashed line in the chart; median AUM growth of 17.9% a year vs 4.6% for advisors. The industry's well-known advisor shortage shows up directly in the ADV data.
+# * **Almost entire data set is understaffed with** 92% of \$1B+ target RIAs sit above the dashed line in the chart; median AUM growth of 17.9% a year vs 4.6% for advisors.
 # * **The clearest cases** grew AUM 50-70% a year with flat or falling advisor headcount (Wiss, Facet, Arkadios, Kingswood). They have the budget, and the strongest need for more leverage per advisor.
-
-# %%
-#@title
-show(gap_wm[3], "Most under-staffed target RIAs: 3 years (FY2022→FY2025), top 5 per segment", cols=["segment", "firm_name", "channel", "aum_end", "aum_cagr", "advisor_cagr", "staffing_gap", "adv_start", "adv_end"], n=5, sort="staffing_gap")
-
-# %%
-#@title
-collapsible("Show the 1-year and 5-year views",
-    show(gap_wm[1], "1 year (FY2024→FY2025), top 5 per segment", cols=["segment", "firm_name", "channel", "aum_end", "aum_cagr", "advisor_cagr", "staffing_gap", "adv_start", "adv_end"], n=5, sort="staffing_gap"),
-    show(gap_wm[5], "5 years (FY2020→FY2025), top 5 per segment", cols=["segment", "firm_name", "channel", "aum_end", "aum_cagr", "advisor_cagr", "staffing_gap", "adv_start", "adv_end"], n=5, sort="staffing_gap"))
 
 # %%
 #@title
@@ -862,23 +813,40 @@ ax.set_title(f"{(w3.staffing_gap > 0).mean():.0%} of \\$1B+ target RIAs sit abov
 ax.legend(title="Segment"); plt.tight_layout(); plt.show()
 print(f"{len(w3):,} target RIAs above $1B · median AUM growth {w3.aum_cagr.median():.1%} a year vs advisor growth {w3.advisor_cagr.median():.1%}")
 
-# %% [markdown]
-# # 6. Consolidated findings: a prioritised Nevis target list
-# The three signals combined into one score for **US target RIAs with 5+ advisors**, ranked within each segment by percentile (equal weights):
-# 1. **3-year annual AUM growth**: momentum and budget.
-# 2. **AUM per advisor (Sep 2026)**: current capacity strain.
-# 3. **3-year staffing gap**: strain that is getting worse.
+# %%
+#@title
+show(gap_wm[3], "Most under-staffed target RIAs: 3 years (FY2022→FY2025), top 5 per segment", cols=["segment", "firm_name", "channel", "aum_end", "aum_cagr", "advisor_cagr", "staffing_gap", "adv_start", "adv_end"], n=5, sort="staffing_gap")
 
 # %%
 #@title
-targets = targets.join(t["crd"]).join(ref["ownership"][["new_controlling_entity_since_2020", "likely_pe_sponsor_owner"]], on="crd").drop(columns="crd")
-show(targets, "Prioritised Nevis targets: top 10 per segment by combined score (0-100)",
-     cols=["segment", "firm_name", "channel", "website", "aum_end", "aum_cagr", "aum_per_advisor", "staffing_gap", "adv_end",
-           "new_controlling_entity_since_2020", "likely_pe_sponsor_owner", "nevis_score"], sort="nevis_score")
+collapsible("Show the 1-year and 5-year views",
+    show(gap_wm[1], "1 year (FY2024→FY2025), top 5 per segment", cols=["segment", "firm_name", "channel", "aum_end", "aum_cagr", "advisor_cagr", "staffing_gap", "adv_start", "adv_end"], n=5, sort="staffing_gap"),
+    show(gap_wm[5], "5 years (FY2020→FY2025), top 5 per segment", cols=["segment", "firm_name", "channel", "aum_end", "aum_cagr", "advisor_cagr", "staffing_gap", "adv_start", "adv_end"], n=5, sort="staffing_gap"))
+
+# %% [markdown]
+# # 6. Consolidated findings: a prioritised Nevis target list (\$10B+)
+# Every US target RIA above \$10B with 5+ advisors is scored on three signals:
+#
+# | Signal | What it shows | How it is measured |
+# |---|---|---|
+# | **3-year annual AUM growth** | Which firms are growing the fastest | Annual AUM growth, FY2022→FY2025 |
+# | **AUM per advisor** | Which firms' advisors need support today | FY2025 AUM ÷ advisors |
+# | **3-year staffing gap** | Which firms are on track for the highest capacity constraint | Annual AUM growth minus annual advisor-headcount growth, FY2022→FY2025 |
+#
+# **Nevis score (0–100):** for each signal, every firm is ranked against the other firms in its own segment and given a percentile (0 = lowest in the segment, 100 = highest). The Nevis score is the simple average of the three percentiles, with equal weights. A score of 90 means that, on average across the three signals, the firm ranks in the top 10% of its segment. Scores rank firms within a segment, so they are not comparable across segments.
+#
+
+# %%
+#@title
+big_targets = targets[targets.segment.astype(str).isin([">$50B", "$10B-$50B"])]
+n50, n10 = (t.segment.astype(str) == ">$50B").sum(), (t.segment.astype(str) == "$10B-$50B").sum()
+show(big_targets, f"Prioritised Nevis targets: top 10 per segment by Nevis score (scored against {n50} firms above $50B and {n10} at $10B-$50B)",
+     cols=["segment", "firm_name", "channel", "website", "aum_end", "aum_cagr", "aum_per_advisor", "staffing_gap", "adv_end", "nevis_score"], sort="nevis_score")
+
 
 # %% [markdown]
 # **How to use this list.** The score is a prioritisation aid, not a verdict:
-# * **\$50B+ (Enterprise):** Cresset, Pathstone, Focus Partners, MAI, Savant, Carson, IEQ and Fisher combine scale, strong growth and rising AUM per advisor. Osaic and Cetera are a different motion: very large networks with low AUM per advisor, where the opportunity is giving thousands of independent advisors consistent tooling.
+# * **\$50B+ (Enterprise):** Cresset, Pathstone, Focus Partners, MAI, Savant, Carson, IEQ and Fisher combine scale, strong growth and rising AUM per advisor. Osaic and Wells Fargo Advisors are a different motion: very large networks with low AUM per advisor, where the opportunity is giving thousands of independent advisors consistent tooling.
 # * **\$10B-\$50B:** Callan Family Office, Aptus, RWA, Clearstead, Merit, Apella, Apollon and NewEdge are fast-growing aggregators, multi-office firms or family offices, an ideal mid-market Enterprise wedge.
 # * **Next step to sharpen it:** add tech-stack signals and recent M&A announcements, then validate the top 20 with account research before outreach.
 
