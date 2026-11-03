@@ -22,7 +22,7 @@
 # %%
 #@title
 # RUNS THE WHOLE PIPELINE: download SEC files -> standardise -> firm table -> analysis engine -> 22 data checks.
-# Explained in Section 8. Critical checks stop the notebook here, before any result is shown.
+# Explained in the accompanying process document. Critical checks stop the notebook here, before any result is shown.
 
 # ==================== SETTINGS ====================
 import os, re, zipfile, warnings
@@ -647,7 +647,7 @@ def styled(df, caption, fmt=None):
 
 
 # %% [markdown]
-# # 2. **How many RIAs fall into each AUM market segment?**
+# #Q1 **How many RIAs fall into each AUM market segment?**
 #
 # *Segments use each firm's FY2025 total AUM from the SEC's September 2026 file.*
 
@@ -700,7 +700,7 @@ fig.suptitle(f"Most target RIAs are under \\$1B, but the {int(big.firms.sum())} 
 plt.tight_layout(); plt.show()
 
 # %% [markdown]
-# # 3. **Q2a - Who are the fastest-growing firm**
+# # **Q2a - Who are the fastest-growing firm**
 #
 # *Annual AUM growth over 3 years (main view), with 1- and 5-year views below. Organic growth only: firms that grew by acquisition or re-registration are listed separately.
 
@@ -736,7 +736,7 @@ show(inorganic_wm, "Grew by acquisition or consolidation (inorganic), 3 years: t
      cols=["segment", "firm_name", "channel", "aum_start", "aum_end", "aum_cagr", "adv_start", "adv_end"], sort="aum_cagr")
 
 # %% [markdown]
-# # 4. **Q2b - Which firms are capacity-strained?**
+# #**Q2b - Which firms are capacity-strained?**
 #
 # *FY2025 AUM and clients per advisor, firms with 3+ advisors. For target RIAs, clients per advisor matters as much as AUM, because advisor time scales with relationships, not dollars.*
 
@@ -792,7 +792,7 @@ show(cap_wm[cap_wm.segment.astype(str) != "<$1B"], "Highest AUM per advisor: tar
      cols=["segment", "firm_name", "channel", "state", "aum", "advisors", "aum_per_advisor", "clients_per_advisor"], n=5, sort="aum_per_advisor")
 
 # %% [markdown]
-# # 5. **Which RIAs appear under-staffed?**
+# #Q2c - **Which RIAs appear under-staffed?**
 #
 # *Staffing gap = annual AUM growth minus annual growth in advisor headcount. A positive gap means each advisor carries more AUM every year. Firms need at least 3 advisors at the start; acquisitions are excluded.*
 
@@ -824,16 +824,16 @@ collapsible("Show the 1-year and 5-year views",
     show(gap_wm[5], "5 years (FY2020→FY2025), top 5 per segment", cols=["segment", "firm_name", "channel", "aum_end", "aum_cagr", "advisor_cagr", "staffing_gap", "adv_start", "adv_end"], n=5, sort="staffing_gap"))
 
 # %% [markdown]
-# # 6. Consolidated findings: a prioritised Nevis target list (\$10B+)
+# #Extra: Consolidated findings: a prioritised Nevis target list (\$10B+)
 # Every US target RIA above \$10B with 5+ advisors is scored on three signals:
 #
 # | Signal | What it shows | How it is measured |
 # |---|---|---|
-# | **3-year annual AUM growth** | Which firms are growing the fastest | Annual AUM growth, FY2022→FY2025 |
+# | **3-year annual AUM growth** | Which firms are growing the fastest | Annual AUM growth, FY2022 - FY2025 |
 # | **AUM per advisor** | Which firms' advisors need support today | FY2025 AUM ÷ advisors |
-# | **3-year staffing gap** | Which firms are on track for the highest capacity constraint | Annual AUM growth minus annual advisor-headcount growth, FY2022→FY2025 |
+# | **3-year staffing gap** | Which firms are on track for the highest capacity constraint | Annual AUM growth minus annual advisor-headcount growth, FY2022 - FY2025 |
 #
-# **Nevis score (0–100):** for each signal, every firm is ranked against the other firms in its own segment and given a percentile (0 = lowest in the segment, 100 = highest). The Nevis score is the simple average of the three percentiles, with equal weights. A score of 90 means that, on average across the three signals, the firm ranks in the top 10% of its segment. Scores rank firms within a segment, so they are not comparable across segments.
+# **Nevis score (0–100):** for each signal, every firm is ranked against the other firms in its own segment and given a percentile (0 = lowest in the segment, 100 = highest). The Nevis score is the average of the three percentiles, with equal weights.
 #
 
 # %%
@@ -845,16 +845,10 @@ show(big_targets, f"Prioritised Nevis targets: top 10 per segment by Nevis score
 
 
 # %% [markdown]
-# **How to use this list.** The score is a prioritisation aid, not a verdict:
-# * **\$50B+ (Enterprise):** Cresset, Pathstone, Focus Partners, MAI, Savant, Carson, IEQ and Fisher combine scale, strong growth and rising AUM per advisor. Osaic and Wells Fargo Advisors are a different motion: very large networks with low AUM per advisor, where the opportunity is giving thousands of independent advisors consistent tooling.
-# * **\$10B-\$50B:** Callan Family Office, Aptus, RWA, Clearstead, Merit, Apella, Apollon and NewEdge are fast-growing aggregators, multi-office firms or family offices, an ideal mid-market Enterprise wedge.
-# * **Next step to sharpen it:** add tech-stack signals and recent M&A announcements, then validate the top 20 with account research before outreach.
+# #Extra: Additional Supporting Data
 
 # %% [markdown]
-# # 7. Additional supporting data
-
-# %% [markdown]
-# ## 7.1 Which Custodians Should Nevis Focus On
+# ##A) Which Custodians Should Nevis Focus On
 #
 # *Source: Schedule D 5.K(3), each firm's latest filing to December 2024. Firms list every custodian holding 10%+ of their separately managed account AUM, so a firm can list several and columns add up to more than 100%.*
 
@@ -875,9 +869,9 @@ mat.rename(columns=lambda c: c.replace("$", r"\$")).plot.barh(ax=ax, color=["#C9
 ax.set_xlabel("% of firms using custodian"); ax.set_title("Target RIAs use Schwab and Fidelity; asset managers use BNY, State Street and Northern Trust", fontweight="bold"); plt.tight_layout(); plt.show()
 
 # %% [markdown]
-# ## 7.2 Potential PE consolidation:
+# ##B) Potential PE consolidation:
 #
-# nearly half of \$10B+ target RIAs have a new owner since 2020. While some of these come from entity name transfers, the vast majority are through consolidation in the market. Tech rationalization & efficiency gains are often the primary levers PE buyers use. Nevis represents an exceptionally good option for PE firms looks to check both these boxes.
+# nearly half of \$10B+ target RIAs have a new owner since 2020. While most of these come from entity restructuring, many are through consolidation in the market. Tech rationalization & efficiency gains are often the primary levers PE buyers use. Nevis represents an exceptionally good option for PE firms looks to check both these boxes.
 #
 # | Signal | Source | What it indicates |
 # |---|---|---|
@@ -907,62 +901,8 @@ ax.set_title(f"{big:.0%} of \\$10B+ target RIAs have a new controlling owner sin
 plt.tight_layout(); plt.show()
 
 # %% [markdown]
-# # 8. Process
-
-# %% [markdown]
-# ## 8.1 Key terms and data dates
-# | Term | Meaning in this notebook |
-# |---|---|
-# | **AUM** | Regulatory assets under management as filed on Form ADV (Item 5.F) |
-# | **Target RIA** | An RIA Nevis would sell to: US-headquartered, 50%+ of AUM from individuals and high-net-worth clients, offers financial planning, and no more than 500 clients per advisor (broker-dealers with 100+ IARs, e.g. Merrill, also qualify). Asset managers, fund advisers, robo platforms and non-US firms are excluded; wirehouses are kept |
-# | **Independent RIA / Dual-registered (BD)** | Dual-registered firms are also broker-dealers (wirehouses such as Morgan Stanley, networks such as LPL or Edward Jones) |
-# | **Advisors** | Staff performing investment advisory functions (Form ADV Item 5.B(1)) |
-# | **Annual growth** | Compound annual growth rate (CAGR) between two September filings |
-# | **Staffing gap** | Annual AUM growth minus annual advisor-headcount growth, in percentage points (pts). Positive = each advisor carries more every year |
-# | **Organic / inorganic** | Inorganic = growth by acquisition or re-registration (AUM up 2.5x+ or advisors doubled in one year, or a reported succession). Ranked separately |
-# | **Segment** | FY2025 AUM band: under \$1B, \$1–10B, \$10–50B, over \$50B |
-#
-# | Data | As of | Used in |
-# |---|---|---|
-# | AUM, clients, headcount (latest) | **FY2025**, from the SEC's September 2026 file | Sections 2–6 |
-# | Growth history | FY2020–FY2025 (September 2021–2026 files) | Sections 3, 5, 6 |
-# | Firm name, location, website | November 2026 file (most current) | All tables |
-# | Custodians and ownership | Each firm's latest filing to December 2024 (SEC bulk archive) | Section 7 |
-#
-
-# %% [markdown]
-# ## 8.2 How the data was built
-#
-# | Step | What was done | Why |
-# |---|---|---|
-# | **1. Source** | Seven SEC monthly roster files: **September 2021–2026** for metrics, **November 2026** for firm names, addresses and websites | Firms only have to refresh AUM, clients and headcount once a year (the annual amendment, Form ADV General Instruction 4), so one September file per year captures every firm's latest annual figures. **CHECK V12:** 97.4% of firms are unchanged Sep→Nov 2026. Name, address and website must be updated promptly, so the latest file holds them. |
-# | **1b. Bulk archive** | SEC bulk Form ADV archive (filings to Dec 2024): custodians (Schedule D 5.K(3)), owners (Schedules A/B), successions (Schedule D 4), every listed website (Schedule D 1.I) | Not in the monthly roster. Each firm's latest filing to Dec 2024 is used, a year older than the FY2025 metrics. |
-# | **2. Standardise** | Map each file (262 columns to 2022, 448 from 2023) to the brief's fields: SEC# (1.D), CRD# (1.E), name/city/state (1.B, 1.F), website (1.I), AUM (5.F(2)(c)), clients (5.D), employees (5.A), advisors (5.B(1)) | Core fields are stable across the layout change (**CHECK V1**) |
-# | **3. Fix websites** | Prefer the most recent non-social site that matches the firm's name, from all filings | The roster holds one address per firm, often a social profile (Beacon Pointe shows Pinterest) |
-# | **4. Firm table** | One row per firm per year, linked by **CRD#** | CRD# stays constant through renames (**CHECK V11**) |
-# | **5. Classify** | **Target RIA** = US-headquartered, 50%+ of AUM from individuals/HNW, offers financial planning, at most 500 clients per advisor (or a broker-dealer with 100+ IARs, e.g. Merrill). Tagged **Independent RIA** vs **Dual-registered (broker-dealer)** | Removes asset managers, fund advisers, robo/TAMP platforms and non-US firms; keeps wirehouses (**CHECK V19**) |
-# | **6. Measure** | Growth = CAGR between Septembers; capacity = AUM and clients per advisor; staffing gap = AUM CAGR − advisor CAGR | Computed once in the analysis engine, then independently recomputed (**CHECK V16**) |
-#
-# **Labelling:** a September file holds AUM as of each firm's last fiscal year end, so the **Sep 2026 file = FY2025** and results are labelled FY2020–FY2025.
-#
-# **Rules that keep the rankings honest**
-# * **Minimum starting AUM by segment** (\$100M / \$200M / \$2B / \$10B), so a small firm re-registering can't "win" a larger segment.
-# * **Inorganic / step-change flag:** AUM up more than 2.5x or advisors more than doubled in a year, or a reported succession. These are acquisitions or roll-ups and are ranked separately.
-# * **Headcount reclassification flag:** advisors down more than 60% in a year (e.g. Vanguard 301 → 19) is a change in how the form was answered, not attrition. Excluded.
-# * **Segment = FY2025 AUM**, so firms are compared with today's peers.
-#
-# **Limitations:** SEC-registered advisers only (state-registered firms, generally under \$100M, are excluded); growth is nominal and includes market returns; custodian and ownership data run to Dec 2024; advisors (5.B(1)) include research staff; the target-RIA definition is a rules-based proxy.
-#
-
-# %%
-#@title
-print("SEC source files used (firms and columns per snapshot)")
-display(sources_tbl)
-
-
-# %% [markdown]
-# ## 8.3 Data checks: integrity of the data and accuracy of the calculations
-# Every check below runs automatically in the pipeline cell just before Section 2, before any result is shown, and is labelled `CHECK Vn` in the code. The full results table is at the end of this section. **Critical** checks stop the notebook if they fail (bad data never reaches the analysis); **warnings** are reported and explained.
+# # Data checks: integrity of the data and accuracy of the calculations
+# Every check below runs automatically in the pipeline cell just before Section 2, before any result is shown, and is labelled `CHECK Vn` in the code. The full results table is at the end of this section. **Critical** checks stop the notebook if they fail (bad data never reaches the analysis).
 #
 # | ID | What it proves |
 # |---|---|
@@ -989,7 +929,6 @@ display(sources_tbl)
 # | V20 | Bulk-archive extracts (custodians, ownership) link to ≥95% of \$1B+ target RIAs |
 # | V21 | Custodian names are standardised (Schwab, Fidelity, Pershing…) for ≥90% of custodian-held AUM |
 #
-# V0-V13 test the **data**; V14-V21 test the **calculations** and derived classifications.
 
 # %% [markdown]
 # **Headline reconciliation:** firm counts and total regulatory AUM by snapshot.
@@ -1008,16 +947,6 @@ qc
 #@title
 print(f"{(summary.result == 'PASS').sum()} PASS · {(summary.result == 'WARN').sum()} WARN · {(summary.result == 'FAIL').sum()} FAIL")
 summary
-
-# %% [markdown]
-# ## 8.4 Code quality and how AI was used
-# * **How to run:** Runtime → Run all (about 4 minutes in Colab). The first run downloads the SEC files and caches them; every table and chart is also saved in the notebook, so it can be read without running anything. Run all rebuilds every number from the raw SEC files, with no manual steps.
-# * **Clear structure:** settings → data pipeline → analysis engine → data checks (one collapsed cell just before Section 2, with a banner per step) → results (2–7) → explanation (8). Settings, thresholds and segment bands are defined once and reused; small named functions (`fetch`, `standardise`, `window`, `top_by_segment`, `check`, `show`) each do one job.
-# * **Fails loudly:** 22 labelled checks (`CHECK Vn`); critical ones stop the notebook before any result is shown.
-# * **Reproducible and reviewable:** cached downloads, SHA-256 file fingerprints, a fixed random seed, `requirements.txt`, and `nevis_ria_analysis.py` (the same notebook as plain text, so changes diff cleanly on GitHub).
-#
-# **How AI was used.** Built with Claude (Anthropic) working agentically, with the author directing and checking each step. Claude browsed the SEC site and found the right files, mapped all 448 columns to the brief's fields, wrote and ran the pipeline, and surfaced data traps (one website per firm, re-registration "growth", robo platforms passing a naive filter, advisor-count reclassifications), each turned into an explicit rule. The judgement calls were made by the author: snapshot timing (grounded in Form ADV General Instruction 4), the target-RIA definition, thresholds and the commercial framing. Results were verified by the 22 checks, reconciliation to SEC totals, an IAPD spot check of Beacon Pointe, and web spot checks of target websites.
-#
 
 # %%
 #@title Save outputs: Excel workbook of every ranked list and the firm-year CSV (outputs/)
