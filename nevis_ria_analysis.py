@@ -899,21 +899,3 @@ big = own[own.aum >= 10e9].new_controlling_entity_since_2020.fillna(False).astyp
 ax.set_ylabel("% of target RIAs"); ax.set_xlabel(""); ax.tick_params(axis="x", rotation=0)
 ax.set_title(f"{big:.0%} of \\$10B+ target RIAs have a new controlling owner since 2020", fontweight="bold")
 plt.tight_layout(); plt.show()
-
-# %%
-#@title Save outputs: Excel workbook of every ranked list and the firm-year CSV (outputs/)
-with pd.ExcelWriter(OUT / "nevis_ria_targets.xlsx") as xw:
-    fmt(targets).to_excel(xw, sheet_name="Nevis targets", index=False)
-    seg.reset_index().to_excel(xw, sheet_name="Segments", index=False)
-    summary.reset_index().to_excel(xw, sheet_name="Data checks", index=False)
-    for h in (1, 3, 5):
-        fmt(top_by_segment(win[h], "aum_cagr", n=25, wealth_only=True, cols=G, organic=True)).to_excel(xw, sheet_name=f"Fastest growth {h}y (target RIAs)", index=False)
-        fmt(top_by_segment(win[h], "staffing_gap", n=25, wealth_only=True, cols=S, organic=True)).to_excel(xw, sheet_name=f"Under-staffed {h}y (target RIAs)", index=False)
-        fmt(top_by_segment(win[h], "aum_cagr", n=25, cols=G, organic=True)).to_excel(xw, sheet_name=f"Fastest growth {h}y (all)", index=False)
-        fmt(top_by_segment(win[h], "staffing_gap", n=25, cols=S, organic=True)).to_excel(xw, sheet_name=f"Under-staffed {h}y (all)", index=False)
-    fmt(top_by_segment(cap, "aum_per_advisor", n=25, cols=C)).to_excel(xw, sheet_name="Capacity (all)", index=False)
-    fmt(top_by_segment(cap, "aum_per_advisor", n=25, wealth_only=True, cols=C)).to_excel(xw, sheet_name="Capacity (target RIAs)", index=False)
-    pd.concat({k: v[0].head(15) for k, v in cust_tables.items()}).reset_index().to_excel(xw, sheet_name="Custodians", index=False)
-    own.reset_index().to_excel(xw, sheet_name="Ownership change ($1B+ targets)", index=False)
-    latest.drop(columns=["segment"]).assign(segment=latest.segment.astype(str)).to_excel(xw, sheet_name="Firm table (2026)", index=False)
-print("Saved:", list(OUT.iterdir()))
